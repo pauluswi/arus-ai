@@ -101,7 +101,7 @@ All payment operations, AI recommendations, human decisions and authorized actio
 
 **FR-004:** Support payment transaction ingestion through REST APIs.
 
-**FR-005:** Support asynchronous transaction ingestion through Kafka.
+**FR-005:** Support asynchronous transaction ingestion through local Spring Events. Kafka ingestion is an optional adapter for external deployments.
 
 **FR-006:** Maintain unique transaction identifiers and external references.
 
@@ -601,8 +601,26 @@ Initial data sources:
 - Human-in-the-loop financial governance.
 - Security by design.
 - Observability by default.
+- Mockability and local runnability without containers.
 
-## 8.2 Proposed Technology Stack
+## 8.2 Local Mock Runtime
+
+The default development profile must provide mock implementations for all infrastructure and external integrations.
+
+Required mock capabilities:
+
+- H2 persistence or a configurable repository implementation.
+- In-process Spring Events instead of mandatory Kafka.
+- In-memory cache instead of mandatory Redis.
+- In-memory vector search or synthetic RAG fixtures instead of mandatory pgvector.
+- A payment network simulator.
+- Mock identity and role claims instead of mandatory Keycloak.
+- Mock LLM responses and deterministic AI fixtures.
+- Synthetic transaction, reconciliation and exception datasets.
+
+Production integrations remain interface-based and may be activated through Spring profiles.
+
+## 8.3 Proposed Technology Stack
 
 | Component | Technology |
 |---|---|
@@ -613,20 +631,20 @@ Initial data sources:
 | AI Orchestration | LangGraph |
 | LLM | Gemini or OpenAI API |
 | Machine Learning | scikit-learn, XGBoost |
-| Primary Database | PostgreSQL |
-| Vector Search | pgvector |
-| Messaging | Apache Kafka |
-| Distributed Cache | Redis |
-| Authentication | Keycloak / OAuth 2.0 |
-| Containerization | Docker |
-| Orchestration | Kubernetes |
+| Demo Database | H2 or PostgreSQL-compatible mode |
+| Vector Search | In-memory vector mock / optional pgvector |
+| Messaging | In-process Spring Events; optional Kafka adapter |
+| Distributed Cache | In-memory cache; optional Redis |
+| Authentication | Mock OAuth 2.0 / OIDC provider or Spring Security mock |
+| Containerization | Not required for local development |
+| Orchestration | Not required for the initial implementation |
 | Monitoring | Prometheus, Grafana |
 | Distributed Tracing | OpenTelemetry |
 | CI/CD | GitHub Actions |
 
 Technology versions must be validated for compatibility when implementation begins.
 
-## 8.3 Logical Modules
+## 8.4 Logical Modules
 
 1. Payment Management.
 2. Payment Network Integration.
@@ -640,17 +658,19 @@ Technology versions must be validated for compatibility when implementation begi
 10. Authentication and Authorization.
 11. Audit and Monitoring.
 
-## 8.4 Integration Architecture
+## 8.5 Integration Architecture
 
 The platform must support:
 
 - REST APIs for synchronous operations.
-- Kafka for asynchronous events.
+- In-process events for local asynchronous operations.
+- Kafka adapter for deployments that require external Kafka.
 - File-based batch imports.
 - External payment network adapters.
 - AI service integration.
 - Database-backed operational reporting.
 - Core API modules must use Spring MVC or Spring WebFlux consistently within the selected runtime and expose Maven-managed builds.
+- External infrastructure dependencies must have mock or in-memory implementations that run without containers.
 
 ---
 
@@ -752,7 +772,7 @@ Validate:
 - 100,000 transaction batch processing.
 - Reconciliation throughput.
 - API response times.
-- Kafka throughput.
+- Optional Kafka throughput.
 - Concurrent user access.
 - AI investigation workload.
 
@@ -790,7 +810,7 @@ The initial release will be accepted when the following conditions are satisfied
 | AC-012 | AI service failures do not interrupt deterministic reconciliation processing. |
 | AC-013 | The dashboard displays operational metrics. |
 | AC-014 | The application provides automated functional and integration tests. |
-| AC-015 | The application can run using Docker Compose. |
+| AC-015 | The application runs locally without containers or external infrastructure. |
 | AC-016 | Architecture, API and deployment documentation are available. |
 | AC-017 | The Java API builds and runs through Maven and Spring Boot. |
 
@@ -838,7 +858,7 @@ The initial release will be accepted when the following conditions are satisfied
 - AI governance.
 - Performance testing.
 - Observability.
-- Docker and Kubernetes deployment.
+- Optional PostgreSQL, Kafka, Redis, Keycloak and container deployment.
 - Architecture documentation.
 - Demonstration scenarios.
 
@@ -897,7 +917,7 @@ Required deliverables:
 9. AI agent architecture.
 10. AI evaluation report.
 11. Security and governance documentation.
-12. Docker deployment configuration.
+12. Local mock deployment configuration.
 13. Automated test suite.
 14. Operational dashboard.
 15. Demo dataset.

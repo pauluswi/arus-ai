@@ -109,13 +109,13 @@ The initial implementation must use synthetic transaction data and simulated ext
 | AI Orchestration | LangGraph |
 | LLM | Gemini or OpenAI API |
 | Machine Learning | scikit-learn, XGBoost |
-| Database | PostgreSQL |
-| Vector Search | pgvector |
-| Messaging | Apache Kafka |
-| Cache | Redis |
-| Authentication | Keycloak, OAuth 2.0 / OIDC |
-| Containerization | Docker |
-| Orchestration | Kubernetes |
+| Local Demo Database | H2 or PostgreSQL-compatible mode |
+| Vector Search | In-memory vector mock / optional pgvector |
+| Messaging | Spring Events locally / optional Kafka |
+| Cache | In-memory cache locally / optional Redis |
+| Authentication | Mock OAuth 2.0 / OIDC provider locally |
+| Containerization | Not required for local development |
+| Orchestration | Not required for the initial implementation |
 | Monitoring | Prometheus, Grafana |
 | Tracing | OpenTelemetry |
 | CI/CD | GitHub Actions |
@@ -239,24 +239,30 @@ Provides intelligent capabilities:
 Provides communication with external systems:
 
 - REST APIs.
-- Kafka events.
+- Spring Events and in-process event dispatching for local execution.
+- Optional Kafka event adapter.
 - Payment Network Adapters.
-- LLM Provider Adapters.
+- Mock and optional external LLM Provider Adapters.
 - Knowledge Repository Integration.
 
 ### Layer 5 — Infrastructure Layer
 
 Provides:
 
-- PostgreSQL.
-- Redis.
-- Kafka.
-- pgvector.
-- Docker.
-- Kubernetes.
+- H2 or PostgreSQL.
+- In-memory cache or optional Redis.
+- In-process messaging or optional Kafka.
+- In-memory vector storage or optional pgvector.
+- Maven Spring Boot runtime.
 - Monitoring and tracing.
 
 ## 4.2 Hybrid AI Strategy
+
+### Local mock strategy
+
+The default Spring profile must run the complete application with H2, Spring Events, mock authentication, the payment network simulator and deterministic mock AI responses.
+
+FastAPI, external LLM providers, Kafka, Redis, pgvector and Keycloak are optional integrations. They must be behind adapters so switching implementations does not change core payment or reconciliation code.
 
 ARUS AI uses different AI techniques according to the nature of the business problem.
 
@@ -296,7 +302,8 @@ All agent capabilities must be exposed through controlled application APIs or ex
 ## 4.4 Integration Strategy
 
 - Synchronous operations use REST APIs.
-- Asynchronous processing uses Kafka.
+- Local asynchronous processing uses Spring Events.
+- External deployments may use an optional Kafka adapter.
 - AI workflows use LangGraph.
 - External payment integrations use adapter interfaces.
 - AI providers use an abstraction layer to support provider replacement.
@@ -338,11 +345,11 @@ flowchart TB
         AGENTS[Specialized Agents]
     end
 
-    subgraph INFRA[Infrastructure]
-        DB[(PostgreSQL)]
-        VDB[(pgvector)]
-        KAFKA[Kafka]
-        REDIS[(Redis)]
+    subgraph INFRA[Local Infrastructure / Optional Adapters]
+        DB[(H2 / PostgreSQL)]
+        VDB[(In-Memory / pgvector)]
+        EVENTS[Spring Events / Kafka]
+        CACHE[In-Memory / Redis]
     end
 
     LLM[External LLM Provider]
@@ -358,8 +365,8 @@ flowchart TB
     EM --> DB
     AUD --> DB
 
-    CORE --> KAFKA
-    KAFKA --> ORCH
+    CORE --> EVENTS
+    EVENTS --> ORCH
 
     ORCH --> ML
     ORCH --> RAG
@@ -675,9 +682,11 @@ The Copilot must not bypass the normal authorization model.
 
 ## 7.1 Deployment Strategy
 
-The initial deployment will use Docker Compose for local development and demonstration.
+The initial deployment runs locally without containers or external infrastructure.
 
-Kubernetes will be the target deployment environment for demonstrating enterprise deployment architecture.
+The Spring Boot and Angular applications can be started with Maven and a local Node/npm workflow. H2, Spring Events, in-memory caching, mock authentication, simulated payment networks and mock AI responses provide a complete demonstration runtime.
+
+PostgreSQL, Kafka, Redis, Keycloak and pgvector remain optional production adapters and are not required for a normal local demo.
 
 ## 7.2 Logical Deployment Architecture
 
@@ -685,65 +694,44 @@ Kubernetes will be the target deployment environment for demonstrating enterpris
 flowchart TB
     USER[Browser / Operations User]
 
-    subgraph CLUSTER[ARUS AI Deployment Environment]
-        INGRESS[Ingress / API Gateway]
-
-        subgraph APP[Application Workloads]
-            WEB[Angular Frontend]
-            BACKEND[Spring Boot Backend]
-            AI[Python AI Services]
-            WORKER[AI Background Workers]
-        end
-
-        subgraph MIDDLEWARE[Messaging and Cache]
-            KAFKA[Kafka]
-            REDIS[Redis]
-        end
-
-        subgraph DATA[Data Services]
-            DB[(PostgreSQL)]
-            VECTOR[(pgvector)]
-        end
-
-        MON[Prometheus / Grafana]
+    subgraph LOCAL[Local Mock Runtime]
+        WEB[Angular Frontend]
+        BACKEND[Spring Boot Backend]
+        AI[Mock AI Service or Optional FastAPI]
+        EVENTS[Spring Events]
+        CACHE[In-Memory Cache]
+        DB[(H2 Database)]
+        VECTOR[(In-Memory Vector Mock)]
+        AUTH[Mock OIDC Provider]
+        NETWORK[Payment Network Simulator]
     end
 
-    LLM[External LLM API]
-
-    USER --> INGRESS
-    INGRESS --> WEB
-    INGRESS --> BACKEND
-
-    BACKEND <--> KAFKA
+    USER --> WEB
+    WEB --> BACKEND
+    BACKEND --> AUTH
     BACKEND --> DB
-    BACKEND --> REDIS
-
-    KAFKA --> AI
+    BACKEND --> CACHE
+    BACKEND <--> EVENTS
+    BACKEND <--> NETWORK
+    EVENTS --> AI
     AI --> VECTOR
-    AI --> LLM
-
     AI --> BACKEND
-    WORKER --> AI
-
-    APP --> MON
-    MIDDLEWARE --> MON
-    DATA --> MON
 ```
 
 ## 7.3 Infrastructure Components
 
 | Component | Deployment |
 |---|---|
-| Angular Frontend | Docker container |
-| Spring Boot Backend | Docker container, packaged with Maven |
-| Python AI Services | Docker container |
-| AI Workers | Docker container |
-| Kafka | Docker container / managed service |
-| PostgreSQL | Persistent database |
-| Redis | Cache service |
-| pgvector | PostgreSQL extension |
-| Prometheus | Monitoring service |
-| Grafana | Visualization service |
+| Angular Frontend | Local development server |
+| Spring Boot Backend | Maven runtime |
+| Python AI Services | Mock implementation or optional local FastAPI process |
+| Payment Network | In-process simulator |
+| Authentication | Mock OIDC provider or local security configuration |
+| Messaging | Spring Events |
+| Database | H2 or PostgreSQL adapter |
+| Cache | In-memory implementation or optional Redis adapter |
+| Vector Search | In-memory implementation or optional pgvector adapter |
+| Prometheus / Grafana | Optional local monitoring |
 
 ## 7.4 Environment Strategy
 
@@ -752,7 +740,7 @@ The platform should support:
 - Local development.
 - Integration testing.
 - Staging / demonstration.
-- Production-like deployment.
+- Optional production-like deployment.
 
 Sensitive credentials must be supplied through environment-specific secrets management rather than committed to source control.
 
@@ -761,10 +749,10 @@ Sensitive credentials must be supplied through environment-specific secrets mana
 Initial architecture:
 
 - Modular Spring Boot application.
-- Independently scalable AI workers.
-- Asynchronous Kafka processing.
-- PostgreSQL with appropriate indexing.
-- Redis for caching and coordination.
+- H2 or PostgreSQL persistence.
+- In-process Spring Events with optional Kafka implementation.
+- In-memory cache with optional Redis implementation.
+- Optional independently scalable AI workers.
 
 Future scaling options:
 
@@ -784,7 +772,9 @@ Security is implemented across application, infrastructure and AI layers.
 
 ### Authentication
 
-Use OAuth 2.0 / OpenID Connect with Keycloak.
+Use mock OAuth 2.0 / OpenID Connect authentication locally.
+
+The demo may use Spring Security with configured users and role claims. Keycloak remains an optional production identity provider.
 
 ### Authorization
 
@@ -1246,10 +1236,9 @@ arus-ai/
 │   └── arus-intelligence/
 │
 ├── infrastructure/
-│   ├── docker/
 │   ├── kafka/
 │   ├── database/
-│   └── kubernetes/
+│   └── monitoring/
 │
 ├── datasets/
 │   ├── payments/
