@@ -609,14 +609,14 @@ The default development profile must provide mock implementations for all infras
 
 Required mock capabilities:
 
-- H2 persistence or a configurable repository implementation.
+- File-backed H2 persistence with Flyway-managed schema migrations.
 - In-process Spring Events instead of mandatory Kafka.
 - In-memory cache instead of mandatory Redis.
 - In-memory vector search or synthetic RAG fixtures instead of mandatory pgvector.
 - A payment network simulator.
 - Mock identity and role claims instead of mandatory Keycloak.
 - Mock LLM responses and deterministic AI fixtures.
-- Synthetic transaction, reconciliation and exception datasets.
+- Repeatable synthetic transaction fixtures with a reset option that deletes only demo-marked records.
 
 Production integrations remain interface-based and may be activated through Spring profiles.
 

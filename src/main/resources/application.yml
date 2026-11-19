@@ -3,6 +3,15 @@ spring:
     name: arus-ai
   profiles:
     default: local
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
 
 management:
   endpoints:
@@ -17,4 +26,3 @@ info:
   app:
     name: ARUS AI
     description: Intelligent Payment Operations Platform
-

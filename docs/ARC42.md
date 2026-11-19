@@ -815,7 +815,9 @@ The architecture separates operational data, knowledge data and AI execution dat
 
 ### Operational Data
 
-PostgreSQL stores:
+The local profile stores operational records in file-backed H2 and applies schema changes through Flyway. PostgreSQL may be configured for external deployments.
+
+Operational storage includes:
 
 - Transactions.
 - Reconciliation results.
