@@ -8,6 +8,8 @@ import java.util.UUID;
 
 public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, UUID> {
 
+    boolean existsBySourceAndTransactionReference(PaymentSource source, String transactionReference);
+
     long countByDemoRecordTrue();
 
     long countByDemoRecordTrueAndSource(PaymentSource source);

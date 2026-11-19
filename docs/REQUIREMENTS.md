@@ -470,6 +470,10 @@ The application should include:
 | AIExecution | Agent execution metadata |
 | AIModelVersion | Model version information |
 
+Payment and operational records must use validated API contracts, unique identifiers, explicit lifecycle enums, and decimal monetary types. API input validation must reject invalid currencies, non-positive amounts, and malformed required fields.
+
+The initial REST API exposes payment record create, list, and get operations under `/api/v1/payments`. The unified payment record uses a source discriminator (`INTERNAL` or `EXTERNAL`) to represent internal and external transactions with shared attributes. Transaction references must be unique within a source.
+
 ## 6.2 Data Sources
 
 Initial data sources:

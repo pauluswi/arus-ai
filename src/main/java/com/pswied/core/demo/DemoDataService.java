@@ -3,6 +3,7 @@ package com.pswied.core.demo;
 import com.pswied.core.payment.PaymentRecord;
 import com.pswied.core.payment.PaymentRecordRepository;
 import com.pswied.core.payment.PaymentSource;
+import com.pswied.core.payment.PaymentStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,17 +44,17 @@ public class DemoDataService {
 
     private List<PaymentRecord> demoRecords() {
         return List.of(
-                record(PaymentSource.INTERNAL, "INT-1001", "E2E-1001", "1250.00", "EUR", "Northwind GmbH", "SETTLED"),
-                record(PaymentSource.INTERNAL, "INT-1002", "E2E-1002", "87.45", "EUR", "Contoso BV", "SETTLED"),
-                record(PaymentSource.INTERNAL, "INT-1003", "E2E-1003", "250.00", "EUR", "Fabrikam SA", "PENDING"),
-                record(PaymentSource.INTERNAL, "INT-1004", "E2E-1004", "500.00", "EUR", "Adventure Works", "SETTLED"),
-                record(PaymentSource.INTERNAL, "INT-1005", "E2E-1005", "19.99", "EUR", "Tailspin Toys", "FAILED"),
-                record(PaymentSource.INTERNAL, "INT-1006", "E2E-1006", "640.00", "EUR", "Woodgrove Bank", "SETTLED"),
-                record(PaymentSource.EXTERNAL, "EXT-9001", "E2E-1001", "1250.00", "EUR", "Northwind GmbH", "SETTLED"),
-                record(PaymentSource.EXTERNAL, "EXT-9002", "E2E-1002", "87.45", "EUR", "Contoso BV", "SETTLED"),
-                record(PaymentSource.EXTERNAL, "EXT-9004", "E2E-1004", "495.00", "EUR", "Adventure Works", "SETTLED"),
-                record(PaymentSource.EXTERNAL, "EXT-9005", "E2E-1005", "19.99", "EUR", "Tailspin Toys", "REJECTED"),
-                record(PaymentSource.EXTERNAL, "EXT-9007", "E2E-1007", "300.00", "EUR", "Litware Inc", "SETTLED"));
+                record(PaymentSource.INTERNAL, "INT-1001", "E2E-1001", "1250.00", "EUR", "Northwind GmbH", PaymentStatus.SETTLED),
+                record(PaymentSource.INTERNAL, "INT-1002", "E2E-1002", "87.45", "EUR", "Contoso BV", PaymentStatus.SETTLED),
+                record(PaymentSource.INTERNAL, "INT-1003", "E2E-1003", "250.00", "EUR", "Fabrikam SA", PaymentStatus.PENDING),
+                record(PaymentSource.INTERNAL, "INT-1004", "E2E-1004", "500.00", "EUR", "Adventure Works", PaymentStatus.SETTLED),
+                record(PaymentSource.INTERNAL, "INT-1005", "E2E-1005", "19.99", "EUR", "Tailspin Toys", PaymentStatus.FAILED),
+                record(PaymentSource.INTERNAL, "INT-1006", "E2E-1006", "640.00", "EUR", "Woodgrove Bank", PaymentStatus.SETTLED),
+                record(PaymentSource.EXTERNAL, "EXT-9001", "E2E-1001", "1250.00", "EUR", "Northwind GmbH", PaymentStatus.SETTLED),
+                record(PaymentSource.EXTERNAL, "EXT-9002", "E2E-1002", "87.45", "EUR", "Contoso BV", PaymentStatus.SETTLED),
+                record(PaymentSource.EXTERNAL, "EXT-9004", "E2E-1004", "495.00", "EUR", "Adventure Works", PaymentStatus.SETTLED),
+                record(PaymentSource.EXTERNAL, "EXT-9005", "E2E-1005", "19.99", "EUR", "Tailspin Toys", PaymentStatus.REJECTED),
+                record(PaymentSource.EXTERNAL, "EXT-9007", "E2E-1007", "300.00", "EUR", "Litware Inc", PaymentStatus.SETTLED));
     }
 
     private PaymentRecord record(
@@ -63,7 +64,7 @@ public class DemoDataService {
             String amount,
             String currency,
             String counterparty,
-            String status) {
+            PaymentStatus status) {
         return new PaymentRecord(
                 UUID.nameUUIDFromBytes((source + ":" + reference).getBytes(StandardCharsets.UTF_8)),
                 source,

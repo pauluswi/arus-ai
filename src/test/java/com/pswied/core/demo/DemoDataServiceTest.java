@@ -4,6 +4,7 @@ import com.pswied.core.ArusAiApplication;
 import com.pswied.core.payment.PaymentRecord;
 import com.pswied.core.payment.PaymentRecordRepository;
 import com.pswied.core.payment.PaymentSource;
+import com.pswied.core.payment.PaymentStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -54,7 +55,7 @@ class DemoDataServiceTest {
                 "EUR",
                 "Local test",
                 LocalDate.parse("2026-11-18"),
-                "SETTLED",
+                PaymentStatus.SETTLED,
                 Instant.parse("2026-11-18T09:00:00Z"),
                 false));
         DemoDataService.SeedResult resetSeed = demoDataService.initialize(true);

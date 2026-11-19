@@ -819,13 +819,14 @@ The local profile stores operational records in file-backed H2 and applies schem
 
 Operational storage includes:
 
-- Transactions.
-- Reconciliation results.
-- Exceptions.
-- Investigations.
-- Resolution actions.
-- Approvals.
-- Audit records.
+- `payment_record` stores internal and external transactions using a source discriminator.
+- `payment_network` stores network configuration.
+- `reconciliation_batch` and `reconciliation_result` store batch execution and matching evidence.
+- `payment_exception` and `investigation` store discrepancy and investigation lifecycle state.
+- `approval` stores human authorization decisions.
+- `audit_log` stores actor, action, aggregate and event details.
+
+Payment records are exposed through create, list and get operations under `/api/v1/payments`. API DTO validation and database constraints enforce required fields, unique source/reference pairs and decimal monetary precision.
 
 ### Knowledge Data
 

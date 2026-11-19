@@ -45,8 +45,9 @@ public class PaymentRecord {
     @Column(name = "value_date", nullable = false)
     private LocalDate valueDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 24)
-    private String status;
+    private PaymentStatus status;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -66,7 +67,7 @@ public class PaymentRecord {
             String currency,
             String counterparty,
             LocalDate valueDate,
-            String status,
+            PaymentStatus status,
             Instant createdAt,
             boolean demoRecord) {
         this.id = id;
@@ -114,7 +115,7 @@ public class PaymentRecord {
         return valueDate;
     }
 
-    public String getStatus() {
+    public PaymentStatus getStatus() {
         return status;
     }
 
