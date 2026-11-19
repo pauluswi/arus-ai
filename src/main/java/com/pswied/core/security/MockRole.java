@@ -1,0 +1,11 @@
+package com.pswied.core.security;
+
+public enum MockRole {
+    PAYMENT_OPERATOR,
+    RECONCILIATION_OFFICER,
+    OPERATIONS_MANAGER,
+    PAYMENT_ADMIN,
+    COMPLIANCE_OFFICER,
+    AI_GOVERNANCE_OFFICER,
+    SYSTEM_ADMIN
+}

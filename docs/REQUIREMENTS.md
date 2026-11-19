@@ -619,6 +619,7 @@ Required mock capabilities:
 - In-memory vector search or synthetic RAG fixtures instead of mandatory pgvector.
 - A payment network simulator.
 - Mock identity and role claims instead of mandatory Keycloak.
+- Bounded in-memory network submission status cache with expiration.
 - Mock LLM responses and deterministic AI fixtures.
 - Repeatable synthetic transaction fixtures with a reset option that deletes only demo-marked records.
 
@@ -675,6 +676,10 @@ The platform must support:
 - Database-backed operational reporting.
 - Core API modules must use Spring MVC or Spring WebFlux consistently within the selected runtime and expose Maven-managed builds.
 - External infrastructure dependencies must have mock or in-memory implementations that run without containers.
+
+Payment network submissions must be processed asynchronously through Spring Events in the local profile and expose a pollable status. The local mock identity may be selected using validated request headers and must be restricted to local development.
+
+The local network simulator must return deterministic `ACCP` responses for normal payments and `RJCT` responses for payments already marked failed or rejected. Submission status is temporary, bounded, and available for polling from the API.
 
 ---
 

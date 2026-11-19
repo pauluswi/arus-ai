@@ -2,6 +2,7 @@ package com.pswied.core.api;
 
 import com.pswied.core.payment.DuplicatePaymentRecordException;
 import com.pswied.core.payment.PaymentRecordNotFoundException;
+import com.pswied.core.network.NetworkSubmissionNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,6 +16,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(PaymentRecordNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ProblemDetail handleNotFound(PaymentRecordNotFoundException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(NetworkSubmissionNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ProblemDetail handleSubmissionNotFound(NetworkSubmissionNotFoundException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 

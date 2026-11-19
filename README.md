@@ -18,6 +18,8 @@ The local profile uses a file-backed H2 database at `./data/arus-ai` and seeds 1
 
 - API info: `GET http://localhost:8080/api/v1`
 - Payment records: `GET/POST http://localhost:8080/api/v1/payments`, `GET /api/v1/payments/{id}`
+- Mock identity: `GET http://localhost:8080/api/v1/session`
+- Payment network simulation: `POST /api/v1/payments/{id}/network-submissions`, then poll `GET /api/v1/network-submissions/{submissionId}`
 - Health: `GET http://localhost:8080/actuator/health`
 - OpenAPI JSON: `http://localhost:8080/api-docs`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
@@ -41,6 +43,18 @@ curl -X POST http://localhost:8080/api/v1/payments \
 ```
 
 Amounts must be positive with up to 15 integer and 4 fractional digits. Currency is a three-letter uppercase code. Duplicate `(source, transactionReference)` pairs return `409 Conflict`.
+
+Network submissions return `202 Accepted` with a submission ID and `PENDING` status. The local Spring event listener processes the request asynchronously; poll its status endpoint for `SUCCEEDED`, `REJECTED`, or `FAILED`. The simulator deterministically accepts normal records and rejects records whose payment status is `FAILED` or `REJECTED`. Submission status is cached in memory for up to 30 minutes.
+
+The local mock identity defaults to `demo-operator` with `PAYMENT_OPERATOR`. Override it using `X-Mock-User` and `X-Mock-Roles` headers, for example `X-Mock-Roles: OPERATIONS_MANAGER,RECONCILIATION_OFFICER`. Only roles defined by the application are accepted. These headers are development-only and must not be used as authentication in a deployed environment.
+
+```shell
+curl -X POST http://localhost:8080/api/v1/payments/<payment-id>/network-submissions
+curl http://localhost:8080/api/v1/network-submissions/<submission-id>
+curl -H 'X-Mock-User: demo-manager' \
+  -H 'X-Mock-Roles: OPERATIONS_MANAGER,RECONCILIATION_OFFICER' \
+  http://localhost:8080/api/v1/session
+```
 
 To replace only the records marked as synthetic demo data on startup (other records are preserved):
 

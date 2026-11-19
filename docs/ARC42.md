@@ -264,6 +264,8 @@ The default Spring profile must run the complete application with H2, Spring Eve
 
 FastAPI, external LLM providers, Kafka, Redis, pgvector and Keycloak are optional integrations. They must be behind adapters so switching implementations does not change core payment or reconciliation code.
 
+The local payment-network adapter returns deterministic simulated acceptance or rejection responses. Network submissions are dispatched through an after-commit Spring event listener and their status is kept in a bounded, expiring Caffeine cache. Local mock identity headers expose recognized ARUS roles for development only; they are not a production authentication mechanism.
+
 ARUS AI uses different AI techniques according to the nature of the business problem.
 
 | Business Problem | Approach |
