@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: arus-ai
+  profiles:
+    default: local
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+info:
+  app:
+    name: ARUS AI
+    description: Intelligent Payment Operations Platform
+
