@@ -12,6 +12,7 @@ import com.pswied.core.payment.PaymentRecordRepository;
 import com.pswied.core.reconciliation.ReconciliationResult;
 import com.pswied.core.reconciliation.ReconciliationResultNotFoundException;
 import com.pswied.core.reconciliation.ReconciliationResultRepository;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
+@Profile({"local", "test"})
 public class MockInvestigationAiService implements InvestigationAiService {
 
     private static final String PROVIDER = "mock-fixture";

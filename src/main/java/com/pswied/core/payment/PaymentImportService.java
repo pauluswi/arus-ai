@@ -2,9 +2,9 @@ package com.pswied.core.payment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pswied.core.config.DomainEventPublisher;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,14 +31,14 @@ public class PaymentImportService {
     private final PaymentImportIdempotencyRepository idempotencyRepository;
     private final ObjectMapper objectMapper;
     private final Validator validator;
-    private final ApplicationEventPublisher eventPublisher;
+    private final DomainEventPublisher eventPublisher;
 
     public PaymentImportService(
             PaymentRecordRepository paymentRecordRepository,
             PaymentImportIdempotencyRepository idempotencyRepository,
             ObjectMapper objectMapper,
             Validator validator,
-            ApplicationEventPublisher eventPublisher) {
+            DomainEventPublisher eventPublisher) {
         this.paymentRecordRepository = paymentRecordRepository;
         this.idempotencyRepository = idempotencyRepository;
         this.objectMapper = objectMapper;
@@ -105,7 +105,7 @@ public class PaymentImportService {
                 writeResponse(response),
                 Instant.now()));
         if (!savedRecords.isEmpty()) {
-            eventPublisher.publishEvent(new PaymentRecordsIngestedEvent(
+            eventPublisher.publish(new PaymentRecordsIngestedEvent(
                     importId,
                     savedRecords.stream().map(PaymentRecord::getId).toList(),
                     Instant.now()));

@@ -1,7 +1,7 @@
 package com.pswied.core.payment;
 
 import org.springframework.data.domain.Sort;
-import org.springframework.context.ApplicationEventPublisher;
+import com.pswied.core.config.DomainEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,11 +13,11 @@ import java.util.UUID;
 public class PaymentRecordService {
 
     private final PaymentRecordRepository repository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final DomainEventPublisher eventPublisher;
 
     public PaymentRecordService(
             PaymentRecordRepository repository,
-            ApplicationEventPublisher eventPublisher) {
+            DomainEventPublisher eventPublisher) {
         this.repository = repository;
         this.eventPublisher = eventPublisher;
     }
@@ -57,7 +57,7 @@ public class PaymentRecordService {
                 Instant.now(),
                 false);
         PaymentRecord saved = repository.save(record);
-        eventPublisher.publishEvent(new PaymentRecordsIngestedEvent(
+        eventPublisher.publish(new PaymentRecordsIngestedEvent(
                 UUID.randomUUID(),
                 List.of(saved.getId()),
                 Instant.now()));

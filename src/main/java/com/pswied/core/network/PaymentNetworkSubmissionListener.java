@@ -15,12 +15,12 @@ public class PaymentNetworkSubmissionListener {
 
     private final PaymentNetworkSubmissionService submissionService;
     private final PaymentNetworkAdapter paymentNetworkAdapter;
-    private final PaymentNetworkSubmissionCache submissionCache;
+    private final PaymentNetworkSubmissionStore submissionCache;
 
     public PaymentNetworkSubmissionListener(
             PaymentNetworkSubmissionService submissionService,
             PaymentNetworkAdapter paymentNetworkAdapter,
-            PaymentNetworkSubmissionCache submissionCache) {
+            PaymentNetworkSubmissionStore submissionCache) {
         this.submissionService = submissionService;
         this.paymentNetworkAdapter = paymentNetworkAdapter;
         this.submissionCache = submissionCache;

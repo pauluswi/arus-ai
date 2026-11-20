@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: ${ARUS_DATABASE_URL:jdbc:postgresql://localhost:5432/arus_ai}
+    username: ${ARUS_DATABASE_USERNAME:arus}
+    password: ${ARUS_DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+

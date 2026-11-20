@@ -40,6 +40,19 @@ The next start recreates the schema through Flyway and reloads the 11 sample pay
 
 Additional sample payments can be created with `POST /api/v1/payments` or loaded in batches with `POST /api/v1/payments/import` using the JSON or CSV format described below. Each import is limited to 10,000 rows and requires an `Idempotency-Key`.
 
+## Optional PostgreSQL runtime
+
+The default `./demo.sh` runtime remains local and uses H2. To use an already running PostgreSQL instance, activate the opt-in Maven and Spring profiles:
+
+```shell
+ARUS_DATABASE_URL=jdbc:postgresql://localhost:5432/arus_ai \
+ARUS_DATABASE_USERNAME=arus \
+ARUS_DATABASE_PASSWORD='your-local-password' \
+./mvnw -Ppostgres -Dspring-boot.run.profiles=local,postgres spring-boot:run
+```
+
+The `postgres` Maven profile adds the JDBC driver and PostgreSQL Flyway module; `application-postgres.yml` supplies the database configuration. No Docker or database service is installed or started by this command. The combined profile keeps local mock authentication enabled for development only. Kafka, Redis, Keycloak, pgvector and external AI provider connectors are not active yet; their adapter boundaries and integration requirements are documented in [Optional Integrations](docs/INTEGRATIONS.md).
+
 - API info: `GET http://localhost:8080/api/v1`
 - Payment records: `GET/POST http://localhost:8080/api/v1/payments`, `GET /api/v1/payments/{id}`
 - Batch payment import: `POST http://localhost:8080/api/v1/payments/import` (JSON or CSV)

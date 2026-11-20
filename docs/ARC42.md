@@ -398,6 +398,14 @@ retained in browser local storage for local development convenience. This is a m
 mechanism only, not production authentication. Start the API with Maven, then start the Angular
 development server from `frontend/`; no Docker, database server or external service is required.
 
+Infrastructure boundaries are kept replaceable: persistence uses Spring Data repositories,
+domain-event publication uses `DomainEventPublisher`, submission status uses
+`PaymentNetworkSubmissionStore`, network calls use `PaymentNetworkAdapter`, and investigation
+reports use `InvestigationAiService`. The local implementations are selected in the `local` and
+`test` profiles. PostgreSQL is available through the opt-in `postgres` Maven/Spring profile.
+Kafka, Redis, Keycloak, pgvector and external AI provider adapters remain deferred; see
+`docs/INTEGRATIONS.md` for the contracts and activation policy.
+
 ### 5.2.1 Payment Management Module
 
 Responsibilities:

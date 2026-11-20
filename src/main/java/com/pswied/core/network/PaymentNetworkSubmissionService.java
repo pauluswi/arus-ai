@@ -3,7 +3,7 @@ package com.pswied.core.network;
 import com.pswied.core.payment.PaymentRecord;
 import com.pswied.core.payment.PaymentRecordNotFoundException;
 import com.pswied.core.payment.PaymentRecordRepository;
-import org.springframework.context.ApplicationEventPublisher;
+import com.pswied.core.config.DomainEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,13 +14,13 @@ import java.util.UUID;
 public class PaymentNetworkSubmissionService {
 
     private final PaymentRecordRepository paymentRecordRepository;
-    private final PaymentNetworkSubmissionCache submissionCache;
-    private final ApplicationEventPublisher eventPublisher;
+    private final PaymentNetworkSubmissionStore submissionCache;
+    private final DomainEventPublisher eventPublisher;
 
     public PaymentNetworkSubmissionService(
             PaymentRecordRepository paymentRecordRepository,
-            PaymentNetworkSubmissionCache submissionCache,
-            ApplicationEventPublisher eventPublisher) {
+            PaymentNetworkSubmissionStore submissionCache,
+            DomainEventPublisher eventPublisher) {
         this.paymentRecordRepository = paymentRecordRepository;
         this.submissionCache = submissionCache;
         this.eventPublisher = eventPublisher;
@@ -36,7 +36,7 @@ public class PaymentNetworkSubmissionService {
                 paymentRecordId,
                 Instant.now());
         submissionCache.put(pending);
-        eventPublisher.publishEvent(new PaymentNetworkSubmissionRequested(
+        eventPublisher.publish(new PaymentNetworkSubmissionRequested(
                 pending.submissionId(),
                 paymentRecordId));
         return pending;
