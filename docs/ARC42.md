@@ -424,6 +424,8 @@ Matching strategy:
 
 Financially significant matches must be confirmed by deterministic validation and applicable review policies.
 
+The initial Java API implementation uses deterministic one-to-one matching in priority order: exact transaction reference, unique end-to-end identifier, then a unique exact amount/currency/value-date/counterparty key. Identifier matches with a different amount, currency, date, counterparty, or a failed/rejected payment status are persisted as discrepancies; unmatched records remain explicit results. Batch execution and matching evidence are persisted. Ambiguous candidates are not auto-paired, and ML ranking, one-to-many matching, tolerances, and exception generation remain later capabilities.
+
 ### 5.2.3 Exception Management Module
 
 Responsibilities:

@@ -152,6 +152,8 @@ The batch import API accepts JSON or CSV at `POST /api/v1/payments/import`. Each
 
 **FR-024:** Allow authorized users to review and override reconciliation results with mandatory justification and audit records.
 
+The initial local implementation runs synchronously over all stored payments and persists a batch with per-result matching evidence. It matches one-to-one in priority order by transaction reference, unique end-to-end ID, then unique exact amount/currency/value-date/counterparty. Identifier matches with payment-field differences are marked `DISCREPANCY`; records without a unique counterpart are `UNMATCHED`. One-to-many matching, configurable tolerances, exception generation, and review overrides are not part of this initial reconciliation slice.
+
 ## 3.3 Exception Management
 
 **FR-025:** Automatically generate exceptions when reconciliation discrepancies are identified.

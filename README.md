@@ -19,6 +19,7 @@ The local profile uses a file-backed H2 database at `./data/arus-ai` and seeds 1
 - API info: `GET http://localhost:8080/api/v1`
 - Payment records: `GET/POST http://localhost:8080/api/v1/payments`, `GET /api/v1/payments/{id}`
 - Batch payment import: `POST http://localhost:8080/api/v1/payments/import` (JSON or CSV)
+- Reconciliation: `POST http://localhost:8080/api/v1/reconciliation/batches`, then fetch the batch and its results
 - Mock identity: `GET http://localhost:8080/api/v1/session`
 - Payment network simulation: `POST /api/v1/payments/{id}/network-submissions`, then poll `GET /api/v1/network-submissions/{submissionId}`
 - Health: `GET http://localhost:8080/actuator/health`
@@ -71,6 +72,15 @@ curl -X POST http://localhost:8080/api/v1/payments/import \
 ```
 
 CSV files must contain exactly these case-sensitive headers in any order: `source,transactionReference,endToEndId,amount,currency,counterparty,valueDate,status`.
+
+Run reconciliation against all currently stored payment records. Matching is deterministic and one-to-one: exact transaction reference first, then a unique end-to-end ID, then a unique exact amount/currency/value-date/counterparty combination. Amount, currency, date, counterparty, or failed/rejected status differences on an identifier match produce a `DISCREPANCY`; records without a unique counterpart produce `UNMATCHED`. Matching evidence and batch summaries are persisted.
+
+```shell
+curl -X POST http://localhost:8080/api/v1/reconciliation/batches
+curl http://localhost:8080/api/v1/reconciliation/batches/<batch-id>
+curl http://localhost:8080/api/v1/reconciliation/batches/<batch-id>/results
+curl http://localhost:8080/api/v1/reconciliation/batches
+```
 
 Network submissions return `202 Accepted` with a submission ID and `PENDING` status. The local Spring event listener processes the request asynchronously; poll its status endpoint for `SUCCEEDED`, `REJECTED`, or `FAILED`. The simulator deterministically accepts normal records and rejects records whose payment status is `FAILED` or `REJECTED`. Submission status is cached in memory for up to 30 minutes.
 

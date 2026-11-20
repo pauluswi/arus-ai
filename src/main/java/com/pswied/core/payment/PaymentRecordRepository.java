@@ -18,6 +18,8 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, UU
             PaymentSource source,
             Collection<String> transactionReferences);
 
+    List<PaymentRecord> findBySourceOrderByValueDateAscTransactionReferenceAscIdAsc(PaymentSource source);
+
     long countByDemoRecordTrue();
 
     long countByDemoRecordTrueAndSource(PaymentSource source);

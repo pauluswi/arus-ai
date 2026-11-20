@@ -5,6 +5,7 @@ import com.pswied.core.payment.PaymentImportIdempotencyConflictException;
 import com.pswied.core.payment.PaymentImportValidationException;
 import com.pswied.core.payment.PaymentRecordNotFoundException;
 import com.pswied.core.network.NetworkSubmissionNotFoundException;
+import com.pswied.core.reconciliation.ReconciliationBatchNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -25,6 +26,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(NetworkSubmissionNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ProblemDetail handleSubmissionNotFound(NetworkSubmissionNotFoundException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(ReconciliationBatchNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ProblemDetail handleReconciliationBatchNotFound(ReconciliationBatchNotFoundException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
