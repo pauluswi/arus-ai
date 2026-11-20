@@ -105,6 +105,21 @@ class ReconciliationControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void restrictsReconciliationExecutionAndResultsToAuthorizedRoles() throws Exception {
+        mockMvc.perform(post("/api/v1/reconciliation/batches")
+                        .with(SecurityMockMvcRequestPostProcessors.user("operator").roles("PAYMENT_OPERATOR")))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/reconciliation/batches")
+                        .with(SecurityMockMvcRequestPostProcessors.user("operator").roles("PAYMENT_OPERATOR")))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/reconciliation/batches")
+                        .with(SecurityMockMvcRequestPostProcessors.user("reviewer").roles("COMPLIANCE_OFFICER")))
+                .andExpect(status().isOk());
+    }
+
     private PaymentRecordResponse createPayment(
             String source,
             String reference,

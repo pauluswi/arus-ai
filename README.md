@@ -26,7 +26,19 @@ The UI includes an operations dashboard, payment record creation/listing, reconc
 ```
 
 The API starts on `http://localhost:8080` using the `local` profile by default.
-The local profile uses a file-backed H2 database at `./data/arus-ai` and seeds 11 synthetic internal/external payment records when no demo records exist. Schema changes are applied with Flyway.
+The local profile uses a file-backed H2 database at `./data/arus-ai` and seeds 11 synthetic internal/external payment records (6 internal and 5 external) when no demo records exist. They include matched, discrepant and unmatched examples. Schema changes are applied with Flyway.
+
+## Load and reset local sample data
+
+The 11 synthetic sample payments are loaded automatically when the local database starts with no demo records. They are marked as demo records; subsequent starts preserve them and any records you added. For a completely fresh local database, stop the API first and remove the H2 database file:
+
+```shell
+rm ./data/arus-ai.mv.db
+```
+
+The next start recreates the schema through Flyway and reloads the 11 sample payments. This full reset permanently deletes all local payment and operational data in that database; back up the file first if needed. Do not remove it while the API is running.
+
+Additional sample payments can be created with `POST /api/v1/payments` or loaded in batches with `POST /api/v1/payments/import` using the JSON or CSV format described below. Each import is limited to 10,000 rows and requires an `Idempotency-Key`.
 
 - API info: `GET http://localhost:8080/api/v1`
 - Payment records: `GET/POST http://localhost:8080/api/v1/payments`, `GET /api/v1/payments/{id}`
@@ -131,12 +143,6 @@ curl -H 'X-Mock-Roles: OPERATIONS_MANAGER' \
   http://localhost:8080/api/v1/approvals/pending
 ```
 
-To replace only the records marked as synthetic demo data on startup (other records are preserved):
-
-```shell
-./mvnw spring-boot:run -Dspring-boot.run.arguments=--arus.demo-data.reset=true
-```
-
 By default, existing demo records are preserved. Set `--arus.demo-data.enabled=false` to disable automatic seeding.
 
 Run the test suite with:
@@ -145,4 +151,12 @@ Run the test suite with:
 ./mvnw test
 ```
 
-Select another Spring profile with `-Dspring-boot.run.profiles=<profile>`. Tests use an isolated in-memory H2 database.
+The test suite includes unit tests for deterministic matching, API and workflow integration tests, and authorization checks. Tests use isolated in-memory H2 databases. To exercise the database-backed 100,000-payment reconciliation integration test separately:
+
+```shell
+./mvnw -Dtest=ReconciliationScaleIT test
+```
+
+The scale test inserts 100,000 synthetic persisted payment records (50,000 matched pairs) into an isolated in-memory H2 database and verifies all 50,000 reconciliation results were persisted. A run in this development environment completed reconciliation and result persistence in about 1.7 seconds; dataset setup is outside the timed interval, and this measurement is not a production SLA. It is an opt-in test because it exercises a larger workload than the normal suite. Reconciliation processes all payment records currently stored, not just records from the most recent import.
+
+Select another Spring profile with `-Dspring-boot.run.profiles=<profile>`. Tests use isolated in-memory H2 databases.

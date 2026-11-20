@@ -10,6 +10,8 @@ public interface ReconciliationResultRepository extends JpaRepository<Reconcilia
 
     List<ReconciliationResult> findByBatchIdOrderByCreatedAtAscIdAsc(UUID batchId);
 
+    long countByBatchId(UUID batchId);
+
     List<ReconciliationResult> findByBatchIdInOrderByCreatedAtAscIdAsc(Collection<UUID> batchIds);
 
     List<ReconciliationResult> findByInternalRecordIdInOrExternalRecordIdIn(
