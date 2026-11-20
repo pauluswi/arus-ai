@@ -1,0 +1,376 @@
+@if (!auth.session()) {
+  <main class="login-shell">
+    <section class="login-card">
+      <a class="brand" href="#" aria-label="ARUS AI home">
+        <span class="brand-mark">A</span>
+        <span>ARUS <b>AI</b></span>
+      </a>
+      <p class="eyebrow">PAYMENT OPERATIONS CONSOLE</p>
+      <h1>Sign in to your local workspace</h1>
+      <p class="muted">Choose a demo identity to explore the operational workbenches.</p>
+      @if (errorMessage) {
+        <div class="notice error" role="alert">{{ errorMessage }}</div>
+      }
+      <form (ngSubmit)="login()">
+        <label for="username">Demo username</label>
+        <input id="username" name="username" [(ngModel)]="username" required maxlength="120">
+        <fieldset>
+          <legend>Local mock roles</legend>
+          <div class="role-grid">
+            @for (role of availableRoles; track role) {
+              <label class="role-option">
+                <input
+                  type="checkbox"
+                  [checked]="selectedRoles.includes(role)"
+                  (change)="toggleRole(role, $event)"
+                >
+                <span>{{ role.replaceAll('_', ' ') }}</span>
+              </label>
+            }
+          </div>
+        </fieldset>
+        <p class="security-note">Demo only — this selection is not production authentication.</p>
+        <button class="button primary wide" type="submit" [disabled]="busy()">
+          {{ busy() ? 'Connecting…' : 'Continue to workspace' }}
+        </button>
+      </form>
+    </section>
+  </main>
+} @else {
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" (click)="$event.preventDefault(); navigate('dashboard')">
+        <span class="brand-mark">A</span>
+        <span>ARUS <b>AI</b></span>
+      </a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav aria-label="Main navigation">
+        <button [class.active]="page === 'dashboard'" (click)="navigate('dashboard')">
+          <span class="nav-icon">⌂</span> Dashboard
+        </button>
+        <button [class.active]="page === 'transactions'" (click)="navigate('transactions')">
+          <span class="nav-icon">⇄</span> Transactions
+        </button>
+        @if (canViewReconciliation) {
+          <button [class.active]="page === 'reconciliation'" (click)="navigate('reconciliation')">
+            <span class="nav-icon">⟳</span> Reconciliation
+          </button>
+        }
+        @if (canViewExceptions) {
+          <button [class.active]="page === 'exceptions'" (click)="navigate('exceptions')">
+            <span class="nav-icon">◇</span> Exceptions
+          </button>
+        }
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="mock-indicator"><span></span> Local demo environment</div>
+        <div class="user-card">
+          <div class="avatar">{{ auth.session()?.username?.slice(0, 1)?.toUpperCase() }}</div>
+          <div class="user-meta">
+            <strong>{{ auth.session()?.username }}</strong>
+            <small>{{ auth.session()?.roles?.[0]?.replaceAll('_', ' ') }}</small>
+          </div>
+          <button class="icon-button" aria-label="Sign out" title="Sign out" (click)="logout()">↪</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">OPERATIONS / {{ page.toUpperCase() }}</p>
+          <h1>
+            @switch (page) {
+              @case ('dashboard') { Overview }
+              @case ('transactions') { Transactions }
+              @case ('reconciliation') { Reconciliation }
+              @case ('exceptions') { Exception workbench }
+            }
+          </h1>
+        </div>
+        <div class="topbar-actions">
+          <span class="session-tag">LOCAL MOCK SESSION</span>
+          <button class="button secondary" (click)="refresh()" [disabled]="busy()">↻ Refresh</button>
+        </div>
+      </header>
+
+      @if (errorMessage) {
+        <div class="notice error" role="alert">{{ errorMessage }}</div>
+      }
+      @if (successMessage) {
+        <div class="notice success" role="status">{{ successMessage }}</div>
+      }
+
+      @if (page === 'dashboard') {
+        <section class="welcome-row">
+          <div>
+            <p class="muted">Good to see you, {{ auth.session()?.username }}.</p>
+            <h2>Payments, reconciled.</h2>
+            <p class="muted">A clear view of today's payment operations and exceptions.</p>
+          </div>
+          <div class="date-chip">{{ today | date:'EEE, MMM d, y' }}</div>
+        </section>
+        <section class="stat-grid" aria-label="Operations summary">
+          <article class="stat-card">
+            <span class="stat-icon blue">⇄</span><p>Total transactions</p>
+            <strong>{{ payments.length }}</strong><small>Across internal and external records</small>
+          </article>
+          <article class="stat-card">
+            <span class="stat-icon amber">◇</span><p>Open exceptions</p>
+            <strong>{{ openExceptionCount }}</strong><small>{{ criticalExceptionCount }} critical priority</small>
+          </article>
+          <article class="stat-card">
+            <span class="stat-icon green">⟳</span><p>Latest reconciliation</p>
+            <strong>{{ batches.length ? batches[0].matchedCount : '—' }}</strong>
+            <small>{{ batches.length ? 'Matched records' : 'No reconciliation run yet' }}</small>
+          </article>
+          <article class="stat-card">
+            <span class="stat-icon violet">✓</span><p>Pending approvals</p>
+            <strong>{{ pendingApprovals.length }}</strong><small>Awaiting an authorized reviewer</small>
+          </article>
+        </section>
+        <section class="dashboard-grid">
+          <article class="panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">LATEST ACTIVITY</p><h2>Recent transactions</h2></div>
+              <button class="text-button" (click)="navigate('transactions')">View all →</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Reference</th><th>Counterparty</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                  @for (payment of payments.slice(0, 5); track payment.id) {
+                    <tr>
+                      <td><strong>{{ payment.transactionReference }}</strong><small>{{ payment.source }}</small></td>
+                      <td>{{ payment.counterparty }}</td>
+                      <td>{{ payment.amount | currency:payment.currency:'code' }}</td>
+                      <td><span class="status" [class]="statusClass(payment.status)">{{ payment.status }}</span></td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4" class="empty">No payment records found.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </article>
+          <article class="panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">NEEDS ATTENTION</p><h2>Priority exceptions</h2></div>
+              @if (canViewExceptions) { <button class="text-button" (click)="navigate('exceptions')">Open queue →</button> }
+            </div>
+            @if (canViewExceptions) {
+              <div class="exception-preview">
+                @for (exception of exceptions.slice(0, 4); track exception.id) {
+                  <button class="preview-row" (click)="navigate('exceptions'); selectException(exception)">
+                    <span class="severity-dot" [class]="severityClass(exception.severity)"></span>
+                    <span class="preview-copy"><strong>{{ exception.category.replaceAll('_', ' ') }}</strong><small>{{ exception.assignedTo || 'Unassigned' }} · {{ exception.status }}</small></span>
+                    <span class="status" [class]="severityClass(exception.severity)">{{ exception.severity }}</span>
+                  </button>
+                } @empty { <p class="empty">No exceptions to review.</p> }
+              </div>
+            } @else {
+              <p class="empty">Your selected demo roles do not include exception access.</p>
+            }
+          </article>
+        </section>
+      }
+
+      @if (page === 'transactions') {
+        <section class="workbench-grid">
+          <article class="panel form-panel">
+            <div class="panel-heading"><div><p class="eyebrow">PAYMENT OPERATIONS</p><h2>Add transaction</h2></div></div>
+            <form #paymentFormRef="ngForm" (ngSubmit)="createPayment(paymentFormRef)" class="form-grid">
+              <label>Source
+                <select name="source" [(ngModel)]="paymentForm.source" required>
+                  <option value="INTERNAL">Internal</option><option value="EXTERNAL">External</option>
+                </select>
+              </label>
+              <label>Status
+                <select name="status" [(ngModel)]="paymentForm.status" required>
+                  <option>RECEIVED</option><option>PENDING</option><option>SETTLED</option><option>FAILED</option><option>REJECTED</option>
+                </select>
+              </label>
+              <label>Transaction reference<input name="transactionReference" [(ngModel)]="paymentForm.transactionReference" required maxlength="100"></label>
+              <label>End-to-end ID<input name="endToEndId" [(ngModel)]="paymentForm.endToEndId" maxlength="100"></label>
+              <label>Amount<input name="amount" type="number" min="0.0001" step="0.0001" [(ngModel)]="paymentForm.amount" required></label>
+              <label>Currency<input name="currency" [(ngModel)]="paymentForm.currency" pattern="[A-Z]{3}" maxlength="3" required></label>
+              <label>Counterparty<input name="counterparty" [(ngModel)]="paymentForm.counterparty" maxlength="140" required></label>
+              <label>Value date<input name="valueDate" type="date" [(ngModel)]="paymentForm.valueDate" required></label>
+              <button class="button primary form-submit" type="submit" [disabled]="busy() || paymentFormRef.invalid">Create payment</button>
+            </form>
+          </article>
+          <article class="panel transaction-panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">PAYMENT REGISTER</p><h2>{{ payments.length }} transactions</h2></div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Reference</th><th>Source / Date</th><th>Counterparty</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                  @for (payment of payments; track payment.id) {
+                    <tr>
+                      <td><strong>{{ payment.transactionReference }}</strong><small>{{ payment.endToEndId || 'No end-to-end ID' }}</small></td>
+                      <td>{{ payment.source }}<small>{{ payment.valueDate }}</small></td>
+                      <td>{{ payment.counterparty }}</td>
+                      <td>{{ payment.amount | currency:payment.currency:'code' }}</td>
+                      <td><span class="status" [class]="statusClass(payment.status)">{{ payment.status }}</span></td>
+                    </tr>
+                  } @empty { <tr><td colspan="5" class="empty">No transactions found.</td></tr> }
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      }
+
+      @if (page === 'reconciliation') {
+        <section class="panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">MATCHING & EXCEPTIONS</p><h2>Reconciliation runs</h2><p class="muted">Compare internal and external payment records using deterministic matching.</p></div>
+            @if (canRunReconciliation) {
+              <button class="button primary" (click)="runReconciliation()" [disabled]="busy()">＋ Run reconciliation</button>
+            }
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Run ID</th><th>Started</th><th>Initiated by</th><th>Matched</th><th>Discrepancies</th><th>Unmatched</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                @for (batch of batches; track batch.id) {
+                  <tr [class.selected-row]="batch.id === selectedBatchId">
+                    <td><strong>{{ batch.id.slice(0, 8) }}…</strong></td><td>{{ formatDate(batch.startedAt) }}</td>
+                    <td>{{ batch.initiatedBy }}</td><td>{{ batch.matchedCount }}</td><td>{{ batch.discrepancyCount }}</td><td>{{ batch.unmatchedCount }}</td>
+                    <td><span class="status" [class]="statusClass(batch.status)">{{ batch.status }}</span></td>
+                    <td><button class="text-button" (click)="selectBatch(batch.id)">View results</button></td>
+                  </tr>
+                } @empty { <tr><td colspan="8" class="empty">No reconciliation runs yet.</td></tr> }
+              </tbody>
+            </table>
+          </div>
+        </section>
+        @if (selectedBatchId) {
+          <section class="panel results-panel">
+            <div class="panel-heading"><div><p class="eyebrow">BATCH DETAILS</p><h2>Reconciliation results</h2></div><span class="muted">{{ reconciliationResults.length }} results</span></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Result</th><th>Internal record</th><th>External record</th><th>Outcome</th><th>Matching evidence</th></tr></thead>
+                <tbody>
+                  @for (result of reconciliationResults; track result.id) {
+                    <tr><td>{{ result.id.slice(0, 8) }}…</td><td>{{ result.internalRecordId || '—' }}</td><td>{{ result.externalRecordId || '—' }}</td><td><span class="status" [class]="statusClass(result.status)">{{ result.status }}</span></td><td>{{ result.matchingEvidence }}</td></tr>
+                  } @empty { <tr><td colspan="5" class="empty">This batch has no results.</td></tr> }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+      }
+
+      @if (page === 'exceptions') {
+        <section class="exception-layout">
+          <article class="panel exception-queue">
+            <div class="panel-heading"><div><p class="eyebrow">INVESTIGATION QUEUE</p><h2>Exceptions <span class="count">{{ exceptions.length }}</span></h2></div></div>
+            <div class="queue-list">
+              @for (exception of exceptions; track exception.id) {
+                <button class="queue-item" [class.active]="exception.id === selectedExceptionId" (click)="selectException(exception)">
+                  <span class="severity-dot" [class]="severityClass(exception.severity)"></span>
+                  <span class="queue-copy"><strong>{{ exception.category.replaceAll('_', ' ') }}</strong><small>{{ exception.id.slice(0, 8) }}… · {{ exception.createdAt | date:'MMM d, y' }}</small><small>{{ exception.assignedTo || 'Unassigned' }}</small></span>
+                  <span class="status" [class]="statusClass(exception.status)">{{ exception.status.replaceAll('_', ' ') }}</span>
+                </button>
+              } @empty { <p class="empty">No exception records found.</p> }
+            </div>
+          </article>
+
+          <article class="panel exception-detail">
+            @if (selectedException; as exception) {
+              <div class="detail-heading">
+                <div><p class="eyebrow">CASE {{ exception.id.slice(0, 8) }}</p><h2>{{ exception.category.replaceAll('_', ' ') }}</h2></div>
+                <span class="status" [class]="severityClass(exception.severity)">{{ exception.severity }}</span>
+              </div>
+              <div class="detail-facts">
+                <div><small>STATUS</small><strong>{{ exception.status.replaceAll('_', ' ') }}</strong></div>
+                <div><small>PRIORITY</small><strong>{{ exception.priority }}</strong></div>
+                <div><small>ASSIGNED TO</small><strong>{{ exception.assignedTo || 'Unassigned' }}</strong></div>
+              </div>
+              <div class="detail-actions">
+                @if (canAssign) {
+                  <form class="inline-form" (ngSubmit)="assignException()">
+                    <label>Assign to<input name="assignedTo" [(ngModel)]="assignedTo" required maxlength="120"></label>
+                    <button class="button secondary" type="submit" [disabled]="busy()">Save</button>
+                  </form>
+                }
+                @if (canChangeSeverity) {
+                  <form class="inline-form compact" (ngSubmit)="updateSeverity()">
+                    <label>Severity<select name="severity" [(ngModel)]="severity"><option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option></select></label>
+                    <button class="button secondary" type="submit" [disabled]="busy()">Update</button>
+                  </form>
+                }
+              </div>
+              <div class="detail-section">
+                <div class="section-title"><h3>Investigation</h3><button class="text-button" (click)="loadInvestigationReport()">View mock AI report</button></div>
+                @if (canInvestigate) {
+                  <form (ngSubmit)="addInvestigationNote()" class="note-form">
+                    <textarea name="investigationNote" [(ngModel)]="investigationNote" rows="3" maxlength="4000" placeholder="Add an investigation note…" required></textarea>
+                    <button class="button primary" type="submit" [disabled]="busy() || !investigationNote.trim()">Add note</button>
+                  </form>
+                }
+                @for (note of notes; track note.id) {
+                  <div class="note-item"><p>{{ note.note }}</p><small>{{ note.author }} · {{ formatDate(note.createdAt) }}</small></div>
+                } @empty { <p class="muted small-space">No investigation notes recorded.</p> }
+              </div>
+              @if (investigationReport; as report) {
+                <div class="report-card">
+                  <div class="section-title"><h3>Mock AI investigation</h3><span class="status status-info">{{ report.confidence.label }} · {{ report.confidence.score }}</span></div>
+                  <p>{{ report.summary }}</p><small class="muted">Fixture {{ report.fixtureId }} · {{ report.provider }}</small>
+                  <h4>Recommendations</h4>
+                  @for (recommendation of report.recommendations; track recommendation.action) {
+                    <div class="recommendation"><strong>{{ recommendation.action }}</strong><p>{{ recommendation.rationale }}</p><small>{{ recommendation.confidence.label }} · {{ recommendation.confidence.score }}</small></div>
+                  }
+                  <h4>Evidence references</h4>
+                  @for (evidence of report.evidenceReferences; track evidence.id) {
+                    <p class="evidence"><strong>{{ evidence.type }}</strong> · {{ evidence.description }} <small>({{ evidence.id.slice(0, 8) }}…)</small></p>
+                  }
+                  <small class="disclaimer">{{ report.disclaimer }}</small>
+                </div>
+              }
+              @if (canInvestigate) {
+                <div class="detail-section">
+                  <h3>Request a workflow action</h3>
+                  <form class="resolution-form" (ngSubmit)="requestResolution()">
+                    <label>Action<select name="resolutionAction" [(ngModel)]="resolutionAction"><option value="RESOLVE">Request resolution</option><option value="CLOSE">Request closure</option></select></label>
+                    <label>Justification<textarea name="resolutionJustification" [(ngModel)]="resolutionJustification" rows="2" maxlength="1000" required placeholder="Explain why this action is appropriate"></textarea></label>
+                    <button class="button primary" type="submit" [disabled]="busy() || !resolutionJustification.trim()">Submit for approval</button>
+                  </form>
+                </div>
+              }
+              @if (canViewAudit) {
+                <div class="detail-section">
+                  <div class="section-title"><h3>Audit history</h3><button class="text-button" (click)="loadAuditHistory()">Load history</button></div>
+                  @for (entry of auditEntries; track entry.id) {
+                    <div class="audit-item"><strong>{{ entry.action.replaceAll('_', ' ') }}</strong><small>{{ entry.actor }} · {{ formatDate(entry.occurredAt) }}</small><p>{{ entry.details }}</p></div>
+                  } @empty { <p class="muted small-space">Load audit history to review recorded actions.</p> }
+                </div>
+              }
+            } @else {
+              <div class="empty-state"><span>◇</span><h2>Select an exception</h2><p>Choose an item from the queue to review evidence and manage its workflow.</p></div>
+            }
+          </article>
+        </section>
+        @if (canManageApprovals) {
+          <section class="panel approval-panel">
+            <div class="panel-heading"><div><p class="eyebrow">DUAL CONTROL</p><h2>Pending approvals <span class="count">{{ pendingApprovals.length }}</span></h2></div></div>
+            @for (request of pendingApprovals; track request.id) {
+              <div class="approval-item">
+                <div class="approval-copy"><strong>{{ request.action }} exception action</strong><small>Requested by {{ request.requestedBy }} · {{ formatDate(request.requestedAt) }}</small><p>{{ request.justification }}</p></div>
+                <div class="approval-controls">
+                  <input name="approvalJustification-{{request.id}}" [(ngModel)]="approvalJustification" placeholder="Decision justification" maxlength="1000">
+                  <button class="button primary" (click)="decideApproval(request, 'APPROVED')" [disabled]="busy() || !approvalJustification.trim()">Approve</button>
+                  <button class="button danger-outline" (click)="decideApproval(request, 'REJECTED')" [disabled]="busy() || !approvalJustification.trim()">Reject</button>
+                </div>
+              </div>
+            } @empty { <p class="empty">No approvals are waiting for your review.</p> }
+          </section>
+        }
+      }
+      <footer class="footer">ARUS AI · Local-first payment operations · Mock authentication enabled</footer>
+    </main>
+  </div>
+}

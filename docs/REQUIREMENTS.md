@@ -697,63 +697,53 @@ The local network simulator must return deterministic `ACCP` responses for norma
 
 ## 9.1 Main Dashboard
 
-Display:
+The initial local UI displays:
 
 - Total transactions.
-- Successful transactions.
-- Failed transactions.
-- Reconciliation rate.
 - Open exceptions.
-- High-priority exceptions.
-- Average resolution time.
-- AI investigation coverage.
+- Critical exceptions.
+- Matched records from the latest reconciliation.
+- Pending approvals for authorized reviewers.
+- Recent transactions and priority exceptions.
 
 ## 9.2 Payment Transaction Workbench
 
-Provide:
+The initial local UI provides:
 
-- Transaction search.
-- Transaction details.
-- Payment lifecycle history.
-- Internal and external references.
-- Payment status.
-- Related reconciliation results.
+- Payment record creation.
+- A transaction list with source, transaction references, end-to-end ID, counterparty, amount,
+  value date and status.
 
 ## 9.3 Reconciliation Workbench
 
-Provide:
+The initial local UI provides:
 
 - Batch reconciliation execution.
 - Matching results.
 - Matched transactions.
 - Unmatched transactions.
 - Discrepancy classification.
-- Matching evidence.
-- Manual review functionality.
+- Batch summaries and per-result matching evidence for manual review.
 
 ## 9.4 Exception Investigation Workbench
 
-Provide:
+The initial local UI provides:
 
 - Exception details.
-- Transaction history.
-- Investigation timeline.
-- AI investigation summary.
-- Supporting evidence.
-- Root-cause hypothesis.
-- Recommended corrective action.
-- Approval workflow.
+- Assignment and severity updates, investigation notes, audit history and approval requests.
+- Fixture-based investigation summaries, evidence references, recommendations and confidence
+  indicators.
+- Pending approval decisions with required justification for authorized reviewers.
 
-## 9.5 AI Copilot Interface
+## 9.5 AI Investigation Interface
 
-Provide:
+Natural-language queries and autonomous AI execution are deferred. The initial local UI presents
+the deterministic mock investigation report with:
 
-- Natural-language query interface.
-- Context-aware operational questions.
-- Investigation report generation.
+- Investigation summary and recommendations.
 - Evidence references.
-- AI execution status.
 - Recommendation confidence indicators.
+- An explicit fixture-based, advisory-only disclaimer.
 
 ---
 

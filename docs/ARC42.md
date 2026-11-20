@@ -383,6 +383,21 @@ flowchart TB
 
 ## 5.2 Level 2 — Core Application Modules
 
+### 5.2.0 Angular Operations UI
+
+The standalone Angular application in `frontend/` consumes the Spring Boot REST API through a
+development-server proxy to `http://localhost:8080`. It provides dashboard, transaction,
+reconciliation and exception workbenches. The interface uses the existing API for payment records,
+reconciliation results, exception investigation, fixture-based AI reports, audit history and
+approvals. Controls are shown according to the selected local roles; the API remains authoritative
+for authorization.
+
+The local sign-in screen selects a demo username and one or more roles, validates the selection with
+`GET /api/v1/session`, and attaches `X-Mock-User` and `X-Mock-Roles` to API calls. The identity is
+retained in browser local storage for local development convenience. This is a mock identity
+mechanism only, not production authentication. Start the API with Maven, then start the Angular
+development server from `frontend/`; no Docker, database server or external service is required.
+
 ### 5.2.1 Payment Management Module
 
 Responsibilities:
@@ -788,9 +803,11 @@ Security is implemented across application, infrastructure and AI layers.
 
 ### Authentication
 
-Use mock OAuth 2.0 / OpenID Connect authentication locally.
-
-The demo may use Spring Security with configured users and role claims. Keycloak remains an optional production identity provider.
+The current local demo selects a username and one or more roles in the Angular sign-in screen. The
+UI validates this mock identity with `GET /api/v1/session` and sends `X-Mock-User` and
+`X-Mock-Roles` headers; the local Spring Security filter maps those headers to authorities. This is
+development-only and does not authenticate a real user. Production deployments must replace it with
+a trusted identity provider and must not accept client-supplied role headers.
 
 ### Authorization
 

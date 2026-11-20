@@ -2,6 +2,26 @@
 
 Local-first intelligent payment operations API.
 
+## Run the operations UI
+
+Start the API in one terminal:
+
+```shell
+./mvnw spring-boot:run
+```
+
+In another terminal, start the Angular development server:
+
+```shell
+cd frontend
+npm install
+npm start
+```
+
+Open `http://localhost:4200`. The development proxy forwards `/api` requests to the local API at `http://localhost:8080`. On the sign-in screen, choose a demo username and one or more local roles. The UI confirms the selected identity with `GET /api/v1/session` and sends the mock identity headers with API requests. This is a local demonstration flow, not production authentication. No Docker or external service is required.
+
+The UI includes an operations dashboard, payment record creation/listing, reconciliation runs and results, exception investigation and workflow actions, and approval review for authorized demo roles.
+
 ## Requirements
 
 - Java 25
