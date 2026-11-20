@@ -317,6 +317,8 @@ Responsibilities:
 - Generate structured investigation reports.
 - Provide supporting evidence.
 
+The local demo must provide a deterministic, category-based fixture report through an `InvestigationAiService` abstraction. Reports and recommendations must include confidence indicators and references to the persisted exception, reconciliation result, payment records, and investigation notes used as evidence. Fixture confidence is illustrative, not a calibrated probability. The local service must not call an external LLM, perform financial actions, or bypass human approval; Python and external model integrations remain deferred.
+
 ### AI-003: Payment Repair Agent
 
 Responsibilities:

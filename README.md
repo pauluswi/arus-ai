@@ -90,6 +90,8 @@ Reconciliation automatically creates an exception for each discrepancy or unmatc
 
 Repeated reconciliation runs do not create another exception for a payment record that already has an exception.
 
+The local investigation AI is a deterministic fixture service behind the `InvestigationAiService` interface; it does not call an LLM or execute recommendations. For an exception, request `GET /api/v1/exceptions/{exceptionId}/investigation-report` using an authorized operations role. The report includes a category-specific fixture ID, confidence score and label, recommendations with their own confidence indicators, and typed evidence references to the exception, reconciliation result, payment records, and any investigation notes. Confidence values are fixed fixture indicators for demonstration, not calibrated model probabilities; recommendations are advisory and require human review.
+
 The local mock identity defaults to `demo-operator` with `PAYMENT_OPERATOR`. Override it using `X-Mock-User` and `X-Mock-Roles` headers, for example `X-Mock-Roles: OPERATIONS_MANAGER,RECONCILIATION_OFFICER`. Reconciliation runs require `RECONCILIATION_OFFICER` or `OPERATIONS_MANAGER`; assignment requires `RECONCILIATION_OFFICER`, `OPERATIONS_MANAGER`, or `PAYMENT_ADMIN`; severity changes require `OPERATIONS_MANAGER`, `COMPLIANCE_OFFICER`, or `PAYMENT_ADMIN`; approvals require `OPERATIONS_MANAGER` or `COMPLIANCE_OFFICER`. Only roles defined by the application are accepted. These headers are development-only and must not be used as authentication in a deployed environment.
 
 Workflow endpoints include `PUT /api/v1/exceptions/{id}/assignment`, `PUT /api/v1/exceptions/{id}/severity`, `POST` and `GET /api/v1/exceptions/{id}/notes`, `POST /api/v1/exceptions/{id}/resolution-requests`, `GET /api/v1/approvals/pending`, `POST /api/v1/approvals/exception-resolution-requests/{requestId}/decision`, and `GET /api/v1/exceptions/{id}/audit`. Resolution requests accept `{"action":"RESOLVE","justification":"..."}` or `{"action":"CLOSE","justification":"..."}`; decisions accept `{"decision":"APPROVED","justification":"..."}` or `REJECTED`.
@@ -111,6 +113,8 @@ curl -H 'X-Mock-Roles: PAYMENT_OPERATOR' \
   -H 'Content-Type: application/json' \
   -X POST http://localhost:8080/api/v1/exceptions/<exception-id>/notes \
   -d '{"note":"Reviewed network response and confirmed the mismatch."}'
+curl -H 'X-Mock-Roles: PAYMENT_OPERATOR' \
+  http://localhost:8080/api/v1/exceptions/<exception-id>/investigation-report
 curl -H 'X-Mock-Roles: OPERATIONS_MANAGER' \
   http://localhost:8080/api/v1/approvals/pending
 ```

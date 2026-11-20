@@ -266,6 +266,8 @@ FastAPI, external LLM providers, Kafka, Redis, pgvector and Keycloak are optiona
 
 The local payment-network adapter returns deterministic simulated acceptance or rejection responses. Network submissions are dispatched through an after-commit Spring event listener and their status is kept in a bounded, expiring Caffeine cache. Local mock identity headers expose recognized ARUS roles for development only; they are not a production authentication mechanism.
 
+Investigation reports are served by the Java `InvestigationAiService` interface, with a deterministic category-to-fixture implementation for the local demo. The report includes fixed confidence indicators and typed references to the persisted exception, reconciliation result, associated payment records, and investigation notes. Fixture confidence is illustrative rather than calibrated. The service is read-only and advisory: it does not execute recommendations, call an external LLM, or depend on Python. A future adapter can implement the same interface when those integrations are approved.
+
 ARUS AI uses different AI techniques according to the nature of the business problem.
 
 | Business Problem | Approach |
@@ -517,6 +519,8 @@ Knowledge sources:
 - Internal operational knowledge.
 
 ### 5.3.4 Agent Services
+
+The initial Payment Investigation Agent capability is exposed by `GET /api/v1/exceptions/{exceptionId}/investigation-report`. Its mock implementation returns category-specific fixture summaries and recommendations with confidence indicators, and references only evidence retrieved from the application's persisted records. It does not infer unavailable facts, mutate workflow state, or execute recommendations.
 
 | Agent | Main Responsibility |
 |---|---|

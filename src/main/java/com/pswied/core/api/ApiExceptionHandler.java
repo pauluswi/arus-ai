@@ -6,6 +6,7 @@ import com.pswied.core.payment.PaymentImportValidationException;
 import com.pswied.core.payment.PaymentRecordNotFoundException;
 import com.pswied.core.network.NetworkSubmissionNotFoundException;
 import com.pswied.core.reconciliation.ReconciliationBatchNotFoundException;
+import com.pswied.core.reconciliation.ReconciliationResultNotFoundException;
 import com.pswied.core.exception.ExceptionWorkflowConflictException;
 import com.pswied.core.exception.PaymentExceptionNotFoundException;
 import com.pswied.core.exception.ExceptionResolutionRequestNotFoundException;
@@ -35,6 +36,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ReconciliationBatchNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ProblemDetail handleReconciliationBatchNotFound(ReconciliationBatchNotFoundException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(ReconciliationResultNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ProblemDetail handleReconciliationResultNotFound(ReconciliationResultNotFoundException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
