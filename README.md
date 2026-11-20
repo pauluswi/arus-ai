@@ -20,6 +20,8 @@ The local profile uses a file-backed H2 database at `./data/arus-ai` and seeds 1
 - Payment records: `GET/POST http://localhost:8080/api/v1/payments`, `GET /api/v1/payments/{id}`
 - Batch payment import: `POST http://localhost:8080/api/v1/payments/import` (JSON or CSV)
 - Reconciliation: `POST http://localhost:8080/api/v1/reconciliation/batches`, then fetch the batch and its results
+- Exceptions: `GET http://localhost:8080/api/v1/exceptions`
+- Approvals: `GET http://localhost:8080/api/v1/approvals/pending`
 - Mock identity: `GET http://localhost:8080/api/v1/session`
 - Payment network simulation: `POST /api/v1/payments/{id}/network-submissions`, then poll `GET /api/v1/network-submissions/{submissionId}`
 - Health: `GET http://localhost:8080/actuator/health`
@@ -84,7 +86,13 @@ curl http://localhost:8080/api/v1/reconciliation/batches
 
 Network submissions return `202 Accepted` with a submission ID and `PENDING` status. The local Spring event listener processes the request asynchronously; poll its status endpoint for `SUCCEEDED`, `REJECTED`, or `FAILED`. The simulator deterministically accepts normal records and rejects records whose payment status is `FAILED` or `REJECTED`. Submission status is cached in memory for up to 30 minutes.
 
-The local mock identity defaults to `demo-operator` with `PAYMENT_OPERATOR`. Override it using `X-Mock-User` and `X-Mock-Roles` headers, for example `X-Mock-Roles: OPERATIONS_MANAGER,RECONCILIATION_OFFICER`. Only roles defined by the application are accepted. These headers are development-only and must not be used as authentication in a deployed environment.
+Reconciliation automatically creates an exception for each discrepancy or unmatched result. Exceptions can be assigned, prioritized by severity, investigated with append-only notes, and reviewed through their audit history. Resolution and closure require a separate approval: an exception must be investigated with at least one note before requesting resolution; a resolved case requires a distinct approval before closure. The requester cannot approve their own request. Approval and rejection decisions require a justification.
+
+Repeated reconciliation runs do not create another exception for a payment record that already has an exception.
+
+The local mock identity defaults to `demo-operator` with `PAYMENT_OPERATOR`. Override it using `X-Mock-User` and `X-Mock-Roles` headers, for example `X-Mock-Roles: OPERATIONS_MANAGER,RECONCILIATION_OFFICER`. Reconciliation runs require `RECONCILIATION_OFFICER` or `OPERATIONS_MANAGER`; assignment requires `RECONCILIATION_OFFICER`, `OPERATIONS_MANAGER`, or `PAYMENT_ADMIN`; severity changes require `OPERATIONS_MANAGER`, `COMPLIANCE_OFFICER`, or `PAYMENT_ADMIN`; approvals require `OPERATIONS_MANAGER` or `COMPLIANCE_OFFICER`. Only roles defined by the application are accepted. These headers are development-only and must not be used as authentication in a deployed environment.
+
+Workflow endpoints include `PUT /api/v1/exceptions/{id}/assignment`, `PUT /api/v1/exceptions/{id}/severity`, `POST` and `GET /api/v1/exceptions/{id}/notes`, `POST /api/v1/exceptions/{id}/resolution-requests`, `GET /api/v1/approvals/pending`, `POST /api/v1/approvals/exception-resolution-requests/{requestId}/decision`, and `GET /api/v1/exceptions/{id}/audit`. Resolution requests accept `{"action":"RESOLVE","justification":"..."}` or `{"action":"CLOSE","justification":"..."}`; decisions accept `{"decision":"APPROVED","justification":"..."}` or `REJECTED`.
 
 ```shell
 curl -X POST http://localhost:8080/api/v1/payments/<payment-id>/network-submissions
@@ -92,6 +100,19 @@ curl http://localhost:8080/api/v1/network-submissions/<submission-id>
 curl -H 'X-Mock-User: demo-manager' \
   -H 'X-Mock-Roles: OPERATIONS_MANAGER,RECONCILIATION_OFFICER' \
   http://localhost:8080/api/v1/session
+
+curl -H 'X-Mock-Roles: RECONCILIATION_OFFICER' \
+  -X POST http://localhost:8080/api/v1/reconciliation/batches
+curl -H 'X-Mock-Roles: OPERATIONS_MANAGER' \
+  -H 'Content-Type: application/json' \
+  -X PUT http://localhost:8080/api/v1/exceptions/<exception-id>/assignment \
+  -d '{"assignedTo":"demo-operator"}'
+curl -H 'X-Mock-Roles: PAYMENT_OPERATOR' \
+  -H 'Content-Type: application/json' \
+  -X POST http://localhost:8080/api/v1/exceptions/<exception-id>/notes \
+  -d '{"note":"Reviewed network response and confirmed the mismatch."}'
+curl -H 'X-Mock-Roles: OPERATIONS_MANAGER' \
+  http://localhost:8080/api/v1/approvals/pending
 ```
 
 To replace only the records marked as synthetic demo data on startup (other records are preserved):

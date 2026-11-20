@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -55,7 +56,9 @@ class ReconciliationControllerTest {
                 "EXTERNAL", "EXT-UNMATCHED-" + suffix, "E2E-UNMATCHED-EXT-" + suffix,
                 "32.00", "EUR", "External Only", "RECEIVED");
 
-        String batchBody = mockMvc.perform(post("/api/v1/reconciliation/batches"))
+        var reconciler = SecurityMockMvcRequestPostProcessors.user("reconciler")
+                .roles("RECONCILIATION_OFFICER");
+        String batchBody = mockMvc.perform(post("/api/v1/reconciliation/batches").with(reconciler))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
@@ -67,7 +70,8 @@ class ReconciliationControllerTest {
         assertThat(batch.discrepancyCount()).isGreaterThanOrEqualTo(1);
         assertThat(batch.unmatchedCount()).isGreaterThanOrEqualTo(2);
 
-        String resultsBody = mockMvc.perform(get("/api/v1/reconciliation/batches/{id}/results", batch.id()))
+        String resultsBody = mockMvc.perform(get("/api/v1/reconciliation/batches/{id}/results", batch.id())
+                        .with(reconciler))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -87,15 +91,17 @@ class ReconciliationControllerTest {
         assertResult(results, unmatchedInternal, null, ReconciliationResultStatus.UNMATCHED, null);
         assertResult(results, null, unmatchedExternal, ReconciliationResultStatus.UNMATCHED, null);
 
-        mockMvc.perform(get("/api/v1/reconciliation/batches/{id}", batch.id()))
+        mockMvc.perform(get("/api/v1/reconciliation/batches/{id}", batch.id()).with(reconciler))
                 .andExpect(status().isOk());
-        mockMvc.perform(get("/api/v1/reconciliation/batches"))
+        mockMvc.perform(get("/api/v1/reconciliation/batches").with(reconciler))
                 .andExpect(status().isOk());
     }
 
     @Test
     void returnsNotFoundForUnknownBatch() throws Exception {
-        mockMvc.perform(get("/api/v1/reconciliation/batches/{id}", UUID.randomUUID()))
+        mockMvc.perform(get("/api/v1/reconciliation/batches/{id}", UUID.randomUUID())
+                        .with(SecurityMockMvcRequestPostProcessors.user("reconciler")
+                                .roles("RECONCILIATION_OFFICER")))
                 .andExpect(status().isNotFound());
     }
 

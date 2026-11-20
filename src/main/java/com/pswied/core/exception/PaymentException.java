@@ -94,4 +94,20 @@ public class PaymentException {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public void assignTo(String assignedTo) {
+        this.assignedTo = assignedTo;
+        if (status == PaymentExceptionStatus.OPEN) {
+            status = PaymentExceptionStatus.ASSIGNED;
+        }
+    }
+
+    public void updateSeverity(ExceptionSeverity severity, int priority) {
+        this.severity = severity;
+        this.priority = priority;
+    }
+
+    public void updateStatus(PaymentExceptionStatus status) {
+        this.status = status;
+    }
 }

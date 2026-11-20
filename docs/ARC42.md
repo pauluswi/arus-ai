@@ -437,6 +437,12 @@ Responsibilities:
 - Assign cases to users.
 - Track SLA.
 - Record investigation outcomes.
+- Preserve investigation notes and append-only audit history.
+- Route sensitive resolution and closure actions through independent approval.
+
+The Java API creates an exception for each unmatched or discrepant reconciliation result. Assignment is limited to reconciliation officers, operations managers, and payment administrators. Severity changes require an operations manager, compliance officer, or payment administrator. Operators and reconciliation officers can add investigation notes and request resolution; an operations manager or compliance officer must approve or reject. Self-approval is prohibited. A close request is permitted only after resolution and follows the same independent approval rule. The request, decision, actor, and justification are persisted; assignment, severity, notes, and lifecycle changes are audited.
+
+Repeated reconciliation runs do not generate duplicate open exceptions for payment records with an existing exception.
 
 ### 5.2.4 Resolution Workflow Module
 

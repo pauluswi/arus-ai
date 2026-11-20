@@ -154,6 +154,8 @@ The batch import API accepts JSON or CSV at `POST /api/v1/payments/import`. Each
 
 The initial local implementation runs synchronously over all stored payments and persists a batch with per-result matching evidence. It matches one-to-one in priority order by transaction reference, unique end-to-end ID, then unique exact amount/currency/value-date/counterparty. Identifier matches with payment-field differences are marked `DISCREPANCY`; records without a unique counterpart are `UNMATCHED`. One-to-many matching, configurable tolerances, exception generation, and review overrides are not part of this initial reconciliation slice.
 
+Repeated reconciliation runs must not create duplicate exceptions for payment records that already have an exception.
+
 ## 3.3 Exception Management
 
 **FR-025:** Automatically generate exceptions when reconciliation discrepancies are identified.
@@ -183,6 +185,8 @@ The initial local implementation runs synchronously over all stored payments and
 - Resolved.
 - Rejected.
 - Closed.
+
+Each unmatched or discrepant reconciliation result creates a persisted exception with a deterministic category, severity, and priority. Exceptions support role-controlled assignment, severity updates, and append-only investigation notes. Resolution requires an investigation note and a separate approval by an operations manager or compliance officer; closure of a resolved exception also requires approval. The requester cannot approve their own request, and every assignment, severity update, note, resolution request, and approval decision is written to the audit log with its actor and justification where applicable.
 
 **FR-030:** Support investigation notes and attachments.
 

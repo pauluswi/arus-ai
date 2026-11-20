@@ -74,4 +74,15 @@ public class Investigation {
     public Instant getClosedAt() {
         return closedAt;
     }
+
+    public void markInProgress() {
+        if (status == InvestigationStatus.OPEN) {
+            status = InvestigationStatus.IN_PROGRESS;
+        }
+    }
+
+    public void complete(Instant completedAt) {
+        status = InvestigationStatus.COMPLETED;
+        closedAt = completedAt;
+    }
 }
