@@ -9,6 +9,45 @@ Local-first payment operations platform with a Spring Boot API and Angular UI.
 [![Local-first](https://img.shields.io/badge/Runtime-Local--first-167E6A)](#run-the-operations-ui)
 [![No Docker](https://img.shields.io/badge/Docker-Not_required-2496ED?logo=docker&logoColor=white)](#run-the-operations-ui)
 
+## Introduction
+
+ARUS AI is a local-first payment operations demo for ingesting internal and external payment records, reconciling transactions, and managing exceptions through investigation, approval, and audit workflows. Its deterministic reconciliation engine and fixture-based investigation service keep results explainable and repeatable; AI recommendations are advisory and sensitive actions remain subject to authorization and human approval. The default stack is an Angular UI, Java/Spring Boot API, and file-backed H2 database. It runs locally without Docker or external services.
+
+## Architecture Diagram
+
+```mermaid
+flowchart LR
+    USER[Operations User] --> UI[Angular Operations UI]
+    UI -->|REST API| API[Spring Boot API]
+    API --> AUTH[Local Mock Identity]
+
+    subgraph APP[Spring Boot Application]
+        PAY[Payment Management]
+        REC[Reconciliation Engine]
+        EXC[Exception and Approval Workflows]
+        AUD[Audit History]
+        AI[Fixture Investigation AI]
+        EVENTS[Spring Application Events]
+        CACHE[Caffeine Submission Status]
+    end
+
+    API --> PAY
+    API --> REC
+    API --> EXC
+    PAY --> DB[(File-backed H2)]
+    REC --> DB
+    REC --> EXC
+    EXC --> AI
+    EXC --> AUD
+    PAY --> EVENTS
+    EVENTS --> NET[Payment Network Simulator]
+    PAY --> CACHE
+    EXC --> DB
+    AUD --> DB
+```
+
+PostgreSQL is available through an opt-in profile; Kafka, Redis, Keycloak, pgvector, and external AI providers are deferred integrations. See [Optional Integrations](docs/INTEGRATIONS.md) and the [architecture documentation](docs/ARC42.md) for details.
+
 ## Run the operations UI
 
 Run both the Spring Boot API and Angular UI from the repository root:
