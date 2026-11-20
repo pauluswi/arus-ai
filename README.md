@@ -18,6 +18,7 @@ The local profile uses a file-backed H2 database at `./data/arus-ai` and seeds 1
 
 - API info: `GET http://localhost:8080/api/v1`
 - Payment records: `GET/POST http://localhost:8080/api/v1/payments`, `GET /api/v1/payments/{id}`
+- Batch payment import: `POST http://localhost:8080/api/v1/payments/import` (JSON or CSV)
 - Mock identity: `GET http://localhost:8080/api/v1/session`
 - Payment network simulation: `POST /api/v1/payments/{id}/network-submissions`, then poll `GET /api/v1/network-submissions/{submissionId}`
 - Health: `GET http://localhost:8080/actuator/health`
@@ -43,6 +44,33 @@ curl -X POST http://localhost:8080/api/v1/payments \
 ```
 
 Amounts must be positive with up to 15 integer and 4 fractional digits. Currency is a three-letter uppercase code. Duplicate `(source, transactionReference)` pairs return `409 Conflict`.
+
+Import multiple records as JSON or CSV. Both formats require a unique `Idempotency-Key` (up to 120 characters). The same key and payload replays the original response with `Idempotency-Replayed: true`; reusing a key with a different payload returns `409 Conflict`. Each response includes an outcome for every row: `CREATED` or `DUPLICATE`. The API accepts up to 10,000 rows per request; CSV bodies are limited to 5 MiB. Duplicate records already stored or repeated within an import are reported as `DUPLICATE` and are not inserted.
+
+```shell
+curl -X POST http://localhost:8080/api/v1/payments/import \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: demo-import-001' \
+  -d '{
+    "records": [{
+      "source": "EXTERNAL",
+      "transactionReference": "NET-2001",
+      "endToEndId": "E2E-2001",
+      "amount": 125.50,
+      "currency": "EUR",
+      "counterparty": "Example GmbH",
+      "valueDate": "2026-11-18",
+      "status": "RECEIVED"
+    }]
+  }'
+
+curl -X POST http://localhost:8080/api/v1/payments/import \
+  -H 'Content-Type: text/csv' \
+  -H 'Idempotency-Key: demo-csv-import-001' \
+  --data-binary @payments.csv
+```
+
+CSV files must contain exactly these case-sensitive headers in any order: `source,transactionReference,endToEndId,amount,currency,counterparty,valueDate,status`.
 
 Network submissions return `202 Accepted` with a submission ID and `PENDING` status. The local Spring event listener processes the request asynchronously; poll its status endpoint for `SUCCEEDED`, `REJECTED`, or `FAILED`. The simulator deterministically accepts normal records and rejects records whose payment status is `FAILED` or `REJECTED`. Submission status is cached in memory for up to 30 minutes.
 

@@ -392,6 +392,8 @@ Responsibilities:
 - Prevent duplicate ingestion.
 - Publish payment events.
 
+The local batch-import endpoint accepts JSON records or CSV with the exact fields `source,transactionReference,endToEndId,amount,currency,counterparty,valueDate,status`. Requests require a persisted idempotency key (maximum 120 characters); matching retries replay their saved response, while changed payloads under the same key conflict. Each batch is capped at 10,000 records and CSV content at 5 MiB. Duplicate references are returned as per-row outcomes and excluded from persistence. A post-commit Spring event is published only when new records have been stored.
+
 Key domain objects:
 
 - PaymentTransaction.

@@ -113,6 +113,8 @@ All payment operations, AI recommendations, human decisions and authorized actio
 
 **FR-010:** Prevent duplicate ingestion through idempotency controls.
 
+The batch import API accepts JSON or CSV at `POST /api/v1/payments/import`. Each request requires an `Idempotency-Key`; an identical retry replays the stored response, while reusing the key with a different payload returns a conflict. Imports are limited to 10,000 records, and CSV requests are limited to 5 MiB. Existing and within-batch duplicate `(source, transactionReference)` values are reported as per-record duplicate outcomes without inserting another payment. Successfully persisted records publish an asynchronous local Spring event after commit.
+
 ## 3.2 Payment Reconciliation Engine
 
 **FR-011:** Perform automatic matching between internal and external transactions.
