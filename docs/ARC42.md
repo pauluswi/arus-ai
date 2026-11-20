@@ -105,15 +105,18 @@ The initial implementation must use synthetic transaction data and simulated ext
 | Frontend | Angular |
 | Core Backend | Java 25, Spring Boot |
 | Java API Build Tool | Apache Maven |
-| AI Backend | Python, FastAPI |
-| AI Orchestration | LangGraph |
-| LLM | Gemini or OpenAI API |
-| Machine Learning | scikit-learn, XGBoost |
-| Local Demo Database | H2 or PostgreSQL-compatible mode |
-| Vector Search | In-memory vector mock / optional pgvector |
-| Messaging | Spring Events locally / optional Kafka |
-| Cache | In-memory cache locally / optional Redis |
-| Authentication | Mock OAuth 2.0 / OIDC provider locally |
+| Investigation AI (implemented) | Java `InvestigationAiService` with deterministic fixtures |
+| External AI providers | Deferred; implement behind `InvestigationAiService` |
+| AI orchestration / ML | Deferred |
+| Local Demo Database | File-backed H2 |
+| Optional Database | PostgreSQL through the opt-in Maven `postgres` profile |
+| Vector Search | Not implemented; pgvector deferred until retrieval is introduced |
+| Messaging (implemented) | Spring application events behind `DomainEventPublisher` |
+| Optional Messaging | Kafka adapter deferred |
+| Cache (implemented) | Bounded Caffeine store behind `PaymentNetworkSubmissionStore` |
+| Optional Cache | Redis adapter deferred |
+| Authentication (implemented) | Local development-only mock identity |
+| Optional Identity Provider | Keycloak/OIDC integration deferred |
 | Containerization | Not required for local development |
 | Orchestration | Not required for the initial implementation |
 | Monitoring | Prometheus, Grafana |
@@ -226,7 +229,7 @@ Implements deterministic banking capabilities:
 
 ### Layer 3 — AI Intelligence Layer
 
-Provides intelligent capabilities:
+Target capabilities (not part of the current runtime):
 
 - Machine Learning.
 - LLM Integration.
@@ -239,22 +242,22 @@ Provides intelligent capabilities:
 Provides communication with external systems:
 
 - REST APIs.
-- Spring Events and in-process event dispatching for local execution.
-- Optional Kafka event adapter.
+- Spring application events for local execution.
+- Future Kafka event adapter.
 - Payment Network Adapters.
-- Mock and optional external LLM Provider Adapters.
-- Knowledge Repository Integration.
+- Local fixture-based investigation AI; future external AI provider adapters.
+- Future knowledge-repository integration.
 
 ### Layer 5 — Infrastructure Layer
 
-Provides:
+Current local infrastructure and deferred alternatives:
 
-- H2 or PostgreSQL.
-- In-memory cache or optional Redis.
-- In-process messaging or optional Kafka.
-- In-memory vector storage or optional pgvector.
+- H2; opt-in PostgreSQL profile.
+- Caffeine submission-status store; Redis adapter deferred.
+- Spring application events; Kafka adapter deferred.
+- No vector store; pgvector deferred.
 - Maven Spring Boot runtime.
-- Monitoring and tracing.
+- Monitoring and tracing are future capabilities.
 
 ## 4.2 Hybrid AI Strategy
 
@@ -262,15 +265,17 @@ Provides:
 
 The default Spring profile must run the complete application with H2, Spring Events, mock authentication, the payment network simulator and deterministic mock AI responses.
 
-FastAPI, external LLM providers, Kafka, Redis, pgvector and Keycloak are optional integrations. They must be behind adapters so switching implementations does not change core payment or reconciliation code.
+Future FastAPI, external LLM, Kafka, Redis, pgvector and Keycloak integrations must be isolated
+behind adapters so they do not change core payment or reconciliation behavior.
 
 The local payment-network adapter returns deterministic simulated acceptance or rejection responses. Network submissions are dispatched through an after-commit Spring event listener and their status is kept in a bounded, expiring Caffeine cache. Local mock identity headers expose recognized ARUS roles for development only; they are not a production authentication mechanism.
 
 Investigation reports are served by the Java `InvestigationAiService` interface, with a deterministic category-to-fixture implementation for the local demo. The report includes fixed confidence indicators and typed references to the persisted exception, reconciliation result, associated payment records, and investigation notes. Fixture confidence is illustrative rather than calibrated. The service is read-only and advisory: it does not execute recommendations, call an external LLM, or depend on Python. A future adapter can implement the same interface when those integrations are approved.
 
-ARUS AI uses different AI techniques according to the nature of the business problem.
+The following are target AI capabilities, not implemented services. The current investigation
+service returns deterministic fixtures and does not run machine learning, retrieval or an LLM.
 
-| Business Problem | Approach |
+| Business Problem | Target Approach |
 |---|---|
 | Exact transaction matching | Deterministic rules |
 | Ambiguous transaction matching | ML-assisted candidate ranking |
@@ -289,9 +294,9 @@ ARUS AI uses different AI techniques according to the nature of the business pro
 
 ## 4.3 Multi-Agent Strategy
 
-ARUS AI uses LangGraph to coordinate specialized agents.
+Multi-agent orchestration is a future direction; LangGraph and the agents below are not implemented.
 
-The initial implementation includes five agents:
+Potential future agents:
 
 1. Reconciliation Agent.
 2. Payment Investigation Agent.
@@ -306,20 +311,22 @@ All agent capabilities must be exposed through controlled application APIs or ex
 ## 4.4 Integration Strategy
 
 - Synchronous operations use REST APIs.
-- Local asynchronous processing uses Spring Events.
-- External deployments may use an optional Kafka adapter.
-- AI workflows use LangGraph.
+- Local domain events use Spring application events through `DomainEventPublisher`.
+- A Kafka adapter is deferred.
+- Current investigation reports use deterministic Java fixtures; AI workflows/orchestration are deferred.
 - External payment integrations use adapter interfaces.
 - AI providers use an abstraction layer to support provider replacement.
 - Java REST APIs are built, tested and packaged with Apache Maven.
 
 ## 4.5 Architectural Style
 
-The initial release uses a **Modular Monolith for the core banking application**, with independently deployable Python AI services and infrastructure components.
+The current release is a **Modular Monolith**. Investigation fixtures run in-process; no independently
+deployable Python AI service or external infrastructure component is required.
 
 This is preferable to introducing numerous microservices prematurely.
 
-The design must preserve module boundaries so that individual components can be extracted into independent services when justified by scaling, ownership or operational requirements.
+The design preserves module boundaries so that components can be extracted into independent services
+when justified by scaling, ownership or operational requirements.
 
 ---
 
@@ -327,7 +334,8 @@ The design must preserve module boundaries so that individual components can be 
 
 ## 5.1 Level 1 — System Decomposition
 
-The ARUS AI platform consists of the following major building blocks.
+The current local system consists of the following building blocks. PostgreSQL is optional and
+requires an existing server; the other listed integrations are local implementations.
 
 ```mermaid
 flowchart TB
@@ -340,23 +348,16 @@ flowchart TB
         EM[Exception Management]
         WF[Resolution Workflow]
         AUD[Audit Management]
+        AI[Deterministic Investigation AI]
+        AUTH[Local Mock Identity]
     end
 
-    subgraph AI[Python AI Platform]
-        ORCH[Agent Orchestrator]
-        ML[ML Services]
-        RAG[RAG Services]
-        AGENTS[Specialized Agents]
+    subgraph INFRA[Local Infrastructure]
+        DB[(H2)]
+        EVENTS[Spring Application Events]
+        CACHE[Caffeine Submission Store]
+        NETWORK[Payment Network Simulator]
     end
-
-    subgraph INFRA[Local Infrastructure / Optional Adapters]
-        DB[(H2 / PostgreSQL)]
-        VDB[(In-Memory / pgvector)]
-        EVENTS[Spring Events / Kafka]
-        CACHE[In-Memory / Redis]
-    end
-
-    LLM[External LLM Provider]
 
     UI --> API
     API --> PM
@@ -369,16 +370,12 @@ flowchart TB
     EM --> DB
     AUD --> DB
 
+    CORE --> DB
     CORE --> EVENTS
-    EVENTS --> ORCH
-
-    ORCH --> ML
-    ORCH --> RAG
-    ORCH --> AGENTS
-
-    RAG --> VDB
-    AGENTS --> LLM
-    AI --> CORE
+    CORE --> CACHE
+    CORE --> NETWORK
+    EM --> AI
+    API --> AUTH
 ```
 
 ## 5.2 Level 2 — Core Application Modules
@@ -497,9 +494,12 @@ Audit records must be protected against unauthorized modification.
 
 ## 5.3 Level 2 — AI Platform Modules
 
+This is a future design sketch, not a description of deployed services. The current application
+provides an in-process `InvestigationAiService` implementation backed by deterministic fixtures.
+
 ### 5.3.1 AI Orchestrator
 
-Technology: Python + LangGraph.
+Potential technology: Python + LangGraph.
 
 Responsibilities:
 
@@ -725,7 +725,10 @@ The initial deployment runs locally without containers or external infrastructur
 
 The Spring Boot and Angular applications can be started with Maven and a local Node/npm workflow. H2, Spring Events, in-memory caching, mock authentication, simulated payment networks and mock AI responses provide a complete demonstration runtime.
 
-PostgreSQL, Kafka, Redis, Keycloak and pgvector remain optional production adapters and are not required for a normal local demo.
+PostgreSQL has an opt-in Maven/Spring profile and requires a separately provisioned server. Kafka,
+Redis, Keycloak, pgvector and external AI providers are deferred integrations, not available
+connectors. None are required for the local demo. See `docs/INTEGRATIONS.md` for implemented
+boundaries and activation status.
 
 ## 7.2 Logical Deployment Architecture
 
@@ -736,12 +739,11 @@ flowchart TB
     subgraph LOCAL[Local Mock Runtime]
         WEB[Angular Frontend]
         BACKEND[Spring Boot Backend]
-        AI[Mock AI Service or Optional FastAPI]
+        AI[Java Fixture AI Service]
         EVENTS[Spring Events]
-        CACHE[In-Memory Cache]
+        CACHE[Caffeine Submission Store]
         DB[(H2 Database)]
-        VECTOR[(In-Memory Vector Mock)]
-        AUTH[Mock OIDC Provider]
+        AUTH[Local Mock Identity]
         NETWORK[Payment Network Simulator]
     end
 
@@ -752,9 +754,7 @@ flowchart TB
     BACKEND --> CACHE
     BACKEND <--> EVENTS
     BACKEND <--> NETWORK
-    EVENTS --> AI
-    AI --> VECTOR
-    AI --> BACKEND
+    BACKEND --> AI
 ```
 
 ## 7.3 Infrastructure Components
@@ -763,14 +763,14 @@ flowchart TB
 |---|---|
 | Angular Frontend | Local development server |
 | Spring Boot Backend | Maven runtime |
-| Python AI Services | Mock implementation or optional local FastAPI process |
+| Investigation AI | In-process deterministic Java fixture service |
 | Payment Network | In-process simulator |
-| Authentication | Mock OIDC provider or local security configuration |
+| Authentication | Local development-only mock identity |
 | Messaging | Spring Events |
-| Database | H2 or PostgreSQL adapter |
-| Cache | In-memory implementation or optional Redis adapter |
-| Vector Search | In-memory implementation or optional pgvector adapter |
-| Prometheus / Grafana | Optional local monitoring |
+| Database | H2 by default; optional PostgreSQL profile with an external server |
+| Cache | Bounded Caffeine implementation |
+| Vector Search | Not currently used |
+| Monitoring | Not currently configured |
 
 ## 7.4 Environment Strategy
 
@@ -785,15 +785,19 @@ Sensitive credentials must be supplied through environment-specific secrets mana
 
 ## 7.5 Scalability Strategy
 
-Initial architecture:
+Current architecture:
 
 - Modular Spring Boot application.
-- H2 or PostgreSQL persistence.
-- In-process Spring Events with optional Kafka implementation.
-- In-memory cache with optional Redis implementation.
-- Optional independently scalable AI workers.
+- File-backed H2 persistence by default; PostgreSQL through the opt-in profile.
+- In-process Spring application events.
+- Bounded Caffeine submission-status store.
+- In-process deterministic investigation AI.
 
-Future scaling options:
+Future scaling and integration options:
+
+- Kafka adapter for event delivery.
+- Redis-backed submission-status store.
+- Independent AI workers, if external AI capabilities are implemented.
 
 - Extract reconciliation into a dedicated service.
 - Scale AI agents independently.
@@ -871,12 +875,8 @@ Payment records are exposed through create, list and get operations under `/api/
 
 ### Knowledge Data
 
-PostgreSQL + pgvector stores:
-
-- Document metadata.
-- Document chunks.
-- Embeddings.
-- Knowledge references.
+No knowledge retrieval or vector data store is implemented in the current application. PostgreSQL
+and pgvector support for knowledge retrieval remains a future integration.
 
 ### AI Execution Data
 
@@ -891,7 +891,9 @@ Stores:
 
 ## 8.3 Event-Driven Architecture
 
-Kafka is used for asynchronous communication.
+The current local runtime publishes domain events through `DomainEventPublisher`, backed by Spring
+application events and after-commit listeners. Kafka is not currently connected; a future adapter
+must preserve post-commit publication and idempotent consumer behavior.
 
 Initial domain events:
 
@@ -911,7 +913,10 @@ Event schemas should be versioned and include correlation identifiers.
 
 ## 8.4 AI Architecture
 
-### Model Strategy
+The current AI implementation is an in-process deterministic fixture service. The following model,
+orchestration, RAG and ML strategies are future options and are not active in the runtime.
+
+### Future Model Strategy
 
 Use a provider abstraction to avoid tight coupling to one LLM vendor.
 
@@ -920,7 +925,7 @@ Initial options:
 - OpenAI models.
 - Google Gemini models.
 
-### Agent Orchestration
+### Future Agent Orchestration
 
 LangGraph manages:
 
@@ -931,13 +936,13 @@ LangGraph manages:
 - Workflow retries.
 - Execution tracing.
 
-### RAG Strategy
+### Future RAG Strategy
 
 RAG is used to retrieve relevant information from trusted knowledge sources.
 
 The system must provide evidence references and avoid presenting unsupported generated statements as facts.
 
-### ML Strategy
+### Future ML Strategy
 
 Initial models:
 
@@ -1021,23 +1026,24 @@ Financial integrity and authorization tests must be mandatory release gates.
 
 # 9. Architecture Decisions
 
-The following decisions establish the initial architectural direction.
+The table distinguishes decisions implemented in the current local application from deferred target
+architecture decisions. Deferred items do not imply that a corresponding connector or service exists.
 
-| ADR | Decision | Rationale |
-|---|---|---|
-| ADR-001 | Modular Monolith for core application | Reduce initial complexity and preserve clear module boundaries |
-| ADR-002 | Python for AI services | Mature AI and ML ecosystem |
-| ADR-003 | Spring Boot for core banking services | Strong enterprise application and integration capabilities |
-| ADR-004 | LangGraph for agent orchestration | Explicit stateful workflows and human approval checkpoints |
-| ADR-005 | Hybrid AI architecture | Combine deterministic correctness with AI intelligence |
-| ADR-006 | Kafka for asynchronous messaging | Decoupling and scalable event processing |
-| ADR-007 | PostgreSQL as primary database | Transactional consistency and mature relational capabilities |
-| ADR-008 | pgvector for initial vector search | Simplify infrastructure and knowledge retrieval |
-| ADR-009 | Human approval for sensitive actions | Preserve financial accountability |
-| ADR-010 | Provider abstraction for LLMs | Reduce vendor dependency |
-| ADR-011 | Synthetic payment data | Enable safe and reproducible demonstrations |
-| ADR-012 | ISO 20022-inspired data model | Demonstrate European payment domain knowledge |
-| ADR-013 | Maven for Spring Boot API builds | Standardize Java dependency management, builds and test execution |
+| ADR | Decision | Status | Rationale |
+|---|---|---|---|
+| ADR-001 | Modular Monolith for core application | Implemented | Reduce initial complexity and preserve clear module boundaries |
+| ADR-002 | Python for AI services | Deferred | Mature AI and ML ecosystem |
+| ADR-003 | Spring Boot for core banking services | Implemented | Strong enterprise application and integration capabilities |
+| ADR-004 | LangGraph for agent orchestration | Deferred | Explicit stateful workflows and human approval checkpoints |
+| ADR-005 | Hybrid AI architecture | Direction | Combine deterministic correctness with AI intelligence |
+| ADR-006 | Kafka for asynchronous messaging | Deferred | Decoupling and scalable event processing |
+| ADR-007 | H2 by default; PostgreSQL as an optional database | Implemented | Local-first development with a path to relational deployments |
+| ADR-008 | pgvector for initial vector search | Deferred | Simplify infrastructure and knowledge retrieval |
+| ADR-009 | Human approval for sensitive actions | Implemented | Preserve financial accountability |
+| ADR-010 | Provider abstraction for LLMs | Deferred | Reduce vendor dependency |
+| ADR-011 | Synthetic payment data | Implemented | Enable safe and reproducible demonstrations |
+| ADR-012 | ISO 20022-inspired data model | Implemented | Demonstrate European payment domain knowledge |
+| ADR-013 | Maven for Spring Boot API builds | Implemented | Standardize Java dependency management, builds and test execution |
 
 ### ADR-001 — Modular Monolith vs Microservices
 

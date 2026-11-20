@@ -619,21 +619,24 @@ Initial data sources:
 
 ## 8.2 Local Mock Runtime
 
-The default development profile must provide mock implementations for all infrastructure and external integrations.
+The default `local` profile is the supported demonstration runtime and must run without containers,
+credentials or external services.
 
-Required mock capabilities:
+Implemented local capabilities:
 
 - File-backed H2 persistence with Flyway-managed schema migrations.
-- In-process Spring Events instead of mandatory Kafka.
-- In-memory cache instead of mandatory Redis.
-- In-memory vector search or synthetic RAG fixtures instead of mandatory pgvector.
+- In-process Spring events published after the originating transaction commits.
+- Bounded, expiring Caffeine storage for payment network submission status.
 - A payment network simulator.
-- Mock identity and role claims instead of mandatory Keycloak.
-- Bounded in-memory network submission status cache with expiration.
-- Mock LLM responses and deterministic AI fixtures.
-- Repeatable synthetic transaction fixtures with a reset option that deletes only demo-marked records.
+- Local mock identity and role claims.
+- Deterministic investigation fixtures through `InvestigationAiService`.
+- Synthetic demo records and an opt-in reset that preserves non-demo payments.
 
-Production integrations remain interface-based and may be activated through Spring profiles.
+The PostgreSQL JDBC driver and Flyway support are available through the opt-in Maven `postgres`
+profile and `application-postgres.yml`. A PostgreSQL server must be provisioned separately. Kafka,
+Redis, Keycloak, pgvector and external AI provider adapters are not implemented; their activation
+requirements are recorded in `docs/INTEGRATIONS.md`. The local profile does not activate or require
+them.
 
 ## 8.3 Proposed Technology Stack
 
@@ -642,22 +645,26 @@ Production integrations remain interface-based and may be activated through Spri
 | Frontend | Angular |
 | Backend | Java 25, Spring Boot |
 | Java Build Tool | Apache Maven |
-| AI Services | Python, FastAPI |
-| AI Orchestration | LangGraph |
-| LLM | Gemini or OpenAI API |
-| Machine Learning | scikit-learn, XGBoost |
-| Demo Database | H2 or PostgreSQL-compatible mode |
-| Vector Search | In-memory vector mock / optional pgvector |
-| Messaging | In-process Spring Events; optional Kafka adapter |
-| Distributed Cache | In-memory cache; optional Redis |
-| Authentication | Mock OAuth 2.0 / OIDC provider or Spring Security mock |
+| Investigation AI (implemented) | Java `InvestigationAiService`; deterministic fixture implementation |
+| External AI services (planned) | Provider adapter behind `InvestigationAiService` |
+| AI orchestration / ML | Deferred |
+| Demo database | File-backed H2 |
+| Optional database | PostgreSQL through Maven `postgres` profile |
+| Vector search | Deferred; no vector store is used by current features |
+| Messaging (implemented) | Spring application events through `DomainEventPublisher` |
+| Optional messaging | Kafka adapter deferred |
+| Submission status store (implemented) | Bounded Caffeine through `PaymentNetworkSubmissionStore` |
+| Optional cache | Redis adapter deferred |
+| Authentication (implemented) | Development-only Spring Security mock identity |
+| Optional identity provider | Keycloak/OIDC integration deferred |
 | Containerization | Not required for local development |
 | Orchestration | Not required for the initial implementation |
 | Monitoring | Prometheus, Grafana |
 | Distributed Tracing | OpenTelemetry |
 | CI/CD | GitHub Actions |
 
-Technology versions must be validated for compatibility when implementation begins.
+Planned external technologies are not runtime dependencies until their adapters are implemented and
+explicitly activated.
 
 ## 8.4 Logical Modules
 

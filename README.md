@@ -1,6 +1,13 @@
 # ARUS AI
 
-Local-first intelligent payment operations API.
+Local-first payment operations platform with a Spring Boot API and Angular UI.
+
+[![Java 25](https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Spring Boot 3.5.7](https://img.shields.io/badge/Spring_Boot-3.5.7-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Maven](https://img.shields.io/badge/Build-Maven-C71A36?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
+[![Angular 20](https://img.shields.io/badge/Angular-20-DD0031?logo=angular&logoColor=white)](https://angular.dev/)
+[![Local-first](https://img.shields.io/badge/Runtime-Local--first-167E6A)](#run-the-operations-ui)
+[![No Docker](https://img.shields.io/badge/Docker-Not_required-2496ED?logo=docker&logoColor=white)](#run-the-operations-ui)
 
 ## Run the operations UI
 
