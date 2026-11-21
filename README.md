@@ -50,11 +50,42 @@ PostgreSQL is available through an opt-in profile; Kafka, Redis, Keycloak, pgvec
 
 ## AI Capabilities and Business Benefits
 
-**Available in this demo:** Exception investigations return deterministic, category-based reports with recommendations, confidence indicators, and references to the payment, reconciliation, and investigation-note evidence. This gives operations teams a consistent starting point for investigating mismatches and payment issues, while keeping the reasoning traceable. The confidence values are illustrative fixtures, not measured model probabilities; recommendations are advisory and do not trigger financial actions.
+**Available in this demo:** Exception investigations return deterministic, category-based reports with recommendations, confidence indicators, and references to payment, reconciliation, and investigation-note evidence. Additional local mocks provide:
 
-**Potential business benefits:** When connected to validated data and production AI models, this workflow can help payment operations teams reduce manual triage effort, prioritize urgent or high-risk exceptions, identify recurring failure patterns, and shorten the time needed to investigate and resolve payment issues. Human review, authorization, and approval remain essential for sensitive actions.
+- Candidate ranking for ambiguous matches, using transparent reference, end-to-end ID, amount, currency, date, and counterparty signals.
+- Anomaly indicators for failed/rejected statuses and unusually large amounts.
+- Exception classification from persisted reconciliation results.
+- Status-based payment failure risk fixtures.
+- Keyword search over a small, static payment-operations knowledge fixture set.
 
-**Future AI roadmap—not implemented yet:** ML-assisted ranking of ambiguous transaction matches, anomaly detection, exception classification, payment-failure prediction, and AI-assisted knowledge retrieval. The current reconciliation engine uses deterministic rules, and the local investigation AI uses fixtures; no external LLM, machine-learning model, or vector search is active. See [Optional Integrations](docs/INTEGRATIONS.md) for integration status.
+### AI-assisted Operations Flow
+
+The local capability mocks provide suggestions and evidence for an operator to review. They do not make or execute payment decisions.
+
+```mermaid
+flowchart LR
+    DATA[Payments and reconciliation results] --> AI[Local AI capability mocks]
+
+    subgraph CAPABILITIES[Deterministic demo capabilities]
+        MATCH[Rank possible matches]
+        ANOMALY[Flag anomaly signals]
+        CLASSIFY[Suggest exception category]
+        FAILURE[Show status-based failure risk]
+        KNOWLEDGE[Search sample procedures]
+    end
+
+    AI --> CAPABILITIES
+    CAPABILITIES --> RESULTS[Suggestions with signals, scores, or evidence]
+    RESULTS --> REVIEW[Operations user reviews]
+    REVIEW --> WORKFLOW[Existing authorization and approval workflow]
+    WORKFLOW --> AUDIT[Audit history]
+```
+
+These are deterministic heuristics and fixtures—not trained ML models, calibrated probabilities, or vector/LLM retrieval. Outputs are advisory and never initiate financial actions.
+
+**Potential business benefits:** With validated operational data and production models, these capabilities could help teams prioritize cases, reduce manual triage, surface likely match candidates and recurring failure patterns, and find relevant procedures faster. Human review, authorization, and approval remain essential for sensitive actions.
+
+Try the mocks through the authorized API: `GET /api/v1/ai/payments/{paymentRecordId}/match-ranking`, `/anomalies`, and `/failure-prediction`; `GET /api/v1/ai/reconciliation-results/{resultId}/classification`; and `GET /api/v1/ai/knowledge?query=approval`. The current reconciliation engine remains deterministic. External LLMs, trained ML models, and vector search are not active. See [Optional Integrations](docs/INTEGRATIONS.md) for integration status.
 
 ## Run the operations UI
 

@@ -14,13 +14,14 @@ The integration ports are intended to keep those local implementations replaceab
 | Submission status cache | `PaymentNetworkSubmissionStore` | Caffeine-backed `PaymentNetworkSubmissionCache` | Redis-backed store is deferred |
 | Authentication | Spring Security filter chain | Local mock identity | Keycloak/OIDC resource-server configuration is deferred |
 | Investigation AI | `InvestigationAiService` | `MockInvestigationAiService` | External provider adapters are deferred |
-| Vector retrieval | Not currently used by application features | None | pgvector adapter and schema are deferred until a retrieval feature is implemented |
+| Payment operations AI | `PaymentOperationsAiService` | Deterministic ranking, anomaly, classification, status-risk, and keyword-search fixtures | Trained ML models and external AI providers are deferred |
+| Knowledge retrieval | `PaymentOperationsAiService` | Static keyword-matched article fixtures | Semantic/vector retrieval and pgvector are deferred |
 
 `DomainEventPublisher`, `PaymentNetworkSubmissionStore`, `PaymentNetworkAdapter`, and
-`InvestigationAiService` are application-owned boundaries. The local implementations are limited to
-the `local` and `test` profiles where appropriate. A new infrastructure implementation should be
-selected explicitly by its own Spring profile, preserve transaction/authorization semantics, and
-have contract tests that also run against the local implementation.
+`InvestigationAiService` and `PaymentOperationsAiService` are application-owned boundaries. The
+mock AI services are limited to the `local` and `test` profiles. A new infrastructure implementation
+should be selected explicitly by its own Spring profile, preserve transaction/authorization
+semantics, and have contract tests that also run against the local implementation.
 
 ## PostgreSQL profile
 

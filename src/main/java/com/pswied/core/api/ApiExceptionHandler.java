@@ -1,5 +1,9 @@
 package com.pswied.core.api;
 
+import com.pswied.core.ai.MatchedResultClassificationException;
+import com.pswied.core.exception.ExceptionResolutionRequestNotFoundException;
+import com.pswied.core.exception.ExceptionWorkflowConflictException;
+import com.pswied.core.exception.PaymentExceptionNotFoundException;
 import com.pswied.core.payment.DuplicatePaymentRecordException;
 import com.pswied.core.payment.PaymentImportIdempotencyConflictException;
 import com.pswied.core.payment.PaymentImportValidationException;
@@ -7,9 +11,7 @@ import com.pswied.core.payment.PaymentRecordNotFoundException;
 import com.pswied.core.network.NetworkSubmissionNotFoundException;
 import com.pswied.core.reconciliation.ReconciliationBatchNotFoundException;
 import com.pswied.core.reconciliation.ReconciliationResultNotFoundException;
-import com.pswied.core.exception.ExceptionWorkflowConflictException;
-import com.pswied.core.exception.PaymentExceptionNotFoundException;
-import com.pswied.core.exception.ExceptionResolutionRequestNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -92,6 +94,19 @@ public class ApiExceptionHandler {
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .toList());
         return problem;
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ProblemDetail handleInvalidParameter(ConstraintViolationException exception) {
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "The request contains invalid parameters.");
+    }
+
+    @ExceptionHandler(MatchedResultClassificationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ProblemDetail handleMatchedResultClassification(MatchedResultClassificationException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
