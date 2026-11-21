@@ -48,6 +48,14 @@ flowchart LR
 
 PostgreSQL is available through an opt-in profile; Kafka, Redis, Keycloak, pgvector, and external AI providers are deferred integrations. See [Optional Integrations](docs/INTEGRATIONS.md) and the [architecture documentation](docs/ARC42.md) for details.
 
+## AI Capabilities and Business Benefits
+
+**Available in this demo:** Exception investigations return deterministic, category-based reports with recommendations, confidence indicators, and references to the payment, reconciliation, and investigation-note evidence. This gives operations teams a consistent starting point for investigating mismatches and payment issues, while keeping the reasoning traceable. The confidence values are illustrative fixtures, not measured model probabilities; recommendations are advisory and do not trigger financial actions.
+
+**Potential business benefits:** When connected to validated data and production AI models, this workflow can help payment operations teams reduce manual triage effort, prioritize urgent or high-risk exceptions, identify recurring failure patterns, and shorten the time needed to investigate and resolve payment issues. Human review, authorization, and approval remain essential for sensitive actions.
+
+**Future AI roadmap—not implemented yet:** ML-assisted ranking of ambiguous transaction matches, anomaly detection, exception classification, payment-failure prediction, and AI-assisted knowledge retrieval. The current reconciliation engine uses deterministic rules, and the local investigation AI uses fixtures; no external LLM, machine-learning model, or vector search is active. See [Optional Integrations](docs/INTEGRATIONS.md) for integration status.
+
 ## Run the operations UI
 
 Run both the Spring Boot API and Angular UI from the repository root:
