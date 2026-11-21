@@ -26,7 +26,14 @@ flowchart LR
         REC[Reconciliation Engine]
         EXC[Exception and Approval Workflows]
         AUD[Audit History]
-        AI[Fixture Investigation AI]
+        subgraph AIMOCKS[Local Advisory AI Mocks]
+            INVEST[Fixture Investigation Reports]
+            MATCH[Ambiguous Match Ranking]
+            ANOMALY[Anomaly Indicators]
+            CLASSIFY[Exception Classification]
+            FAILURE[Payment Failure Risk]
+            KNOWLEDGE[Knowledge Fixture Search]
+        end
         EVENTS[Spring Application Events]
         CACHE[Caffeine Submission Status]
     end
@@ -34,11 +41,27 @@ flowchart LR
     API --> PAY
     API --> REC
     API --> EXC
+    API --> INVEST
+    API --> MATCH
+    API --> ANOMALY
+    API --> CLASSIFY
+    API --> FAILURE
+    API --> KNOWLEDGE
     PAY --> DB[(File-backed H2)]
     REC --> DB
     REC --> EXC
-    EXC --> AI
+    PAY --> MATCH
+    PAY --> ANOMALY
+    PAY --> FAILURE
+    REC --> CLASSIFY
+    EXC --> INVEST
     EXC --> AUD
+    INVEST -->|advisory evidence| UI
+    MATCH -->|ranked suggestions| UI
+    ANOMALY -->|signals| UI
+    CLASSIFY -->|suggested category| UI
+    FAILURE -->|illustrative risk| UI
+    KNOWLEDGE -->|fixture articles| UI
     PAY --> EVENTS
     EVENTS --> NET[Payment Network Simulator]
     PAY --> CACHE
