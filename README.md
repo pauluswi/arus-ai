@@ -81,6 +81,19 @@ PostgreSQL is available through an opt-in profile; Kafka, Redis, Keycloak, pgvec
 - Status-based payment failure risk fixtures.
 - Keyword search over a small, static payment-operations knowledge fixture set.
 
+### What the AI suggestions mean
+
+| Capability | What it tells the operator | Possible human follow-up |
+|---|---|---|
+| **Possible match ranking** (`match-ranking`) | These records share some payment details and may be counterparts. The score and matching signals explain why they were ranked; they do not confirm a match. | Compare the original instructions and settlement records. Confirm the match in the existing reconciliation workflow, or document why the candidate is not correct. |
+| **Anomaly indicators** (`anomalies`) | A payment meets one or more configured mock rules, such as a failed/rejected status or an illustrative high-amount threshold. This is not a fraud finding. | Review the source instruction and supporting evidence. Ask the relevant team or counterparty for clarification when needed. |
+| **Payment status risk** (`failure-prediction`) | The payment's current status maps to an illustrative risk level. A failed or rejected payment is already in that state; this mock does not forecast a future failure. | Check the actual network response and reason code. Follow the normal process for any retry or remediation; do not infer a future outcome from this score. |
+| **Suggested exception category** (`classification`) | The reconciliation result appears to fit a category such as payment failure, amount mismatch, or unmatched transaction, based on persisted evidence. | Verify the category against the payment records and reconciliation evidence, then correct or continue the case through the existing exception workflow. |
+| **Knowledge search** (`knowledge`) | The query matched one or more articles from a small static set of sample procedures. | Use the result as a pointer, then consult the applicable approved procedure for the actual case. |
+| **Investigation report** | A deterministic report summarizes the exception and presents advisory recommendations with evidence references. | Review the cited records and notes, add investigation notes, and request resolution only if supported by evidence and policy. |
+
+These mock outputs are prompts for human review, not decisions. Scores and confidence indicators are illustrative and not calibrated probabilities; the mocks do not change payment records or perform financial actions. Sensitive resolutions remain subject to authorization and independent approval.
+
 ### AI-assisted Operations Flow
 
 The local capability mocks provide suggestions and evidence for an operator to review. They do not make or execute payment decisions.
