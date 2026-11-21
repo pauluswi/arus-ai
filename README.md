@@ -81,6 +81,44 @@ flowchart LR
     WORKFLOW --> AUDIT[Audit history]
 ```
 
+### Example AI-assisted output
+
+For example, given a failed EUR 12,000 internal payment and an external record with the same end-to-end ID, amount, currency, value date, and counterparty, the mock endpoints return separate suggestions like these:
+
+```json
+{
+  "match-ranking": [
+    {
+      "transactionReference": "NET-2042",
+      "score": 0.60,
+      "confidence": "MEDIUM",
+      "matchingSignals": ["endToEndId", "amount", "currency", "valueDate", "counterparty"]
+    }
+  ],
+  "anomalies": {
+    "severity": "HIGH",
+    "score": 1.00,
+    "indicators": [
+      "Payment status is FAILED.",
+      "Amount meets or exceeds the illustrative high-value threshold of 10000.00 EUR."
+    ]
+  },
+  "failure-prediction": {
+    "currentStatus": "FAILED",
+    "risk": "HIGH",
+    "score": 0.94,
+    "fixtureId": "payment-failure-status-v1"
+  },
+  "classification": {
+    "category": "PAYMENT_FAILURE",
+    "confidence": 0.94,
+    "fixtureId": "exception-classification-rules-v1"
+  }
+}
+```
+
+This is a combined illustration of separate API responses, not one endpoint response. The user reviews the candidates and evidence, then continues through existing authorization and approval controls; the mock does not match, resolve, retry, or otherwise change a payment automatically.
+
 These are deterministic heuristics and fixtures—not trained ML models, calibrated probabilities, or vector/LLM retrieval. Outputs are advisory and never initiate financial actions.
 
 **Potential business benefits:** With validated operational data and production models, these capabilities could help teams prioritize cases, reduce manual triage, surface likely match candidates and recurring failure patterns, and find relevant procedures faster. Human review, authorization, and approval remain essential for sensitive actions.
